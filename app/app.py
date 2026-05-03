@@ -1320,7 +1320,7 @@ def page_dashboard():
             data        = prepare_llm_input(result, pinfo)
             report_text = generate_report(data)
             data["tumor_size"] = result.get("tumor_size", {})
-            pdf_bytes = generate_pdf(
+            pdf_bytes   = generate_pdf(
                 data=data,
                 report_text=report_text,
                 original_image_path=st.session_state.file_path,

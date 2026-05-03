@@ -321,7 +321,6 @@ def generate_pdf(data, report_text, original_image_path, gradcam_image_path, lim
         story.append(Paragraph("Tumor Size Estimation", section_heading))
         story.append(HRFlowable(width="100%", thickness=1,
                                 color=colors.HexColor('#dddddd'), spaceAfter=6))
-
         tumor_rows = [
             [Paragraph("Size Category", xai_label_style),
              Paragraph(str(tumor.get("size_category", "N/A")), value_style)],
@@ -330,7 +329,8 @@ def generate_pdf(data, report_text, original_image_path, gradcam_image_path, lim
             [Paragraph("Brain Area Coverage", xai_label_style),
              Paragraph(f"{tumor.get('tumor_pct_of_brain', 'N/A')}%", value_style)],
             [Paragraph("Note", xai_label_style),
-             Paragraph("Pixel-based estimate. Not a clinical measurement.", xai_value_style)],
+             Paragraph("Pixel-based estimate. Not a clinical measurement.",
+                       xai_value_style)],
         ]
         tumor_table = Table(tumor_rows, colWidths=[2.4*inch, 4.2*inch])
         tumor_table.setStyle(TableStyle([
