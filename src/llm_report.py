@@ -146,7 +146,10 @@ def generate_report(data):
 # ============================================================
 def generate_pdf(data, report_text, original_image_path, gradcam_image_path, lime_image_path=None):
     """Generate a professional PDF report and return it as bytes."""
-
+    
+    # DEBUG - remove after fix
+    print("DEBUG tumor_size in generate_pdf:", data.get("tumor_size"))
+    
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(
         buffer,
