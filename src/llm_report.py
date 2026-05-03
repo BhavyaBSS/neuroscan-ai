@@ -49,7 +49,8 @@ def prepare_llm_input(result, patient_info=None):
         "observation":       result.get("observation", "Highlighted regions indicate abnormal patterns"),
         "xai_summary":            result.get("xai_summary", {}),
         "confidence_breakdown":   result.get("confidence_breakdown", {}),
-        "tumor_size_str":    tumor_size_str,  # ← ADD THIS
+        "tumor_size":        result.get("tumor_size", {}),
+        "tumor_size_str":    tumor_size_str,
     }
 
     if patient_info:
@@ -315,28 +316,21 @@ def generate_pdf(data, report_text, original_image_path, gradcam_image_path, lim
     story.append(img_table)
 
     # ── TUMOR SIZE SECTION ───────────────────────────────────
-    tumor_size_str = data.get("tumor_size_str", "")
-    if tumor_size_str:
+    tumor = data.get("tumor_size", {})
+    if tumor and tumor.get("size_category") not in ("None", None, ""):
         story.append(Paragraph("Tumor Size Estimation", section_heading))
         story.append(HRFlowable(width="100%", thickness=1,
                                 color=colors.HexColor('#dddddd'), spaceAfter=6))
 
-        # Parse values from string
-        parts = tumor_size_str.split(", ")
-        size_cat = parts[0].replace("Tumor Size Category: ", "") if len(parts) > 0 else "N/A"
-        diameter = parts[1].replace("Estimated Diameter: ", "") if len(parts) > 1 else "N/A"
-        coverage = parts[2].replace("Brain Coverage: ", "") if len(parts) > 2 else "N/A"
-
         tumor_rows = [
             [Paragraph("Size Category", xai_label_style),
-             Paragraph(size_cat, value_style)],
+             Paragraph(str(tumor.get("size_category", "N/A")), value_style)],
             [Paragraph("Estimated Diameter", xai_label_style),
-             Paragraph(diameter, value_style)],
+             Paragraph(f"{tumor.get('diameter_cm', 'N/A')} cm", value_style)],
             [Paragraph("Brain Area Coverage", xai_label_style),
-             Paragraph(coverage, value_style)],
+             Paragraph(f"{tumor.get('tumor_pct_of_brain', 'N/A')}%", value_style)],
             [Paragraph("Note", xai_label_style),
-             Paragraph("Pixel-based estimate assuming 0.3mm/pixel. Not a clinical measurement.",
-                       xai_value_style)],
+             Paragraph("Pixel-based estimate. Not a clinical measurement.", xai_value_style)],
         ]
         tumor_table = Table(tumor_rows, colWidths=[2.4*inch, 4.2*inch])
         tumor_table.setStyle(TableStyle([
