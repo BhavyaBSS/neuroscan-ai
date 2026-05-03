@@ -239,12 +239,12 @@ def run_pipeline(image_path):
     # =========================
     # TUMOR SIZE ESTIMATION
     # =========================
-    MM_PER_PIXEL = 0.3  # Assumed spacing for standard brain MRI (1.5T)
+    MM_PER_PIXEL = 0.25  # Assumed spacing for standard brain MRI (1.5T)
     tumor_size = {}
 
     if "no_tumor" not in pred_label.lower():
         # Threshold CAM to get activation mask
-        threshold = 0.5
+        threshold = 0.75  # higher threshold = tighter around actual tumor
         tumor_mask = (cam_resized >= threshold).astype(np.uint8)
 
         # Morphological cleanup to remove noise

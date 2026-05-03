@@ -889,7 +889,7 @@ def page_landing():
         if st.session_state.show_demo:
             st.markdown("""
             <div class="demo-gallery">
-                <div class="demo-gallery-title">// select a sample scan to analyze</div>
+                <div class="demo-gallery-title"></div>
             </div>
             """, unsafe_allow_html=True)
 
@@ -1319,7 +1319,8 @@ def page_dashboard():
             }
             data        = prepare_llm_input(result, pinfo)
             report_text = generate_report(data)
-            pdf_bytes   = generate_pdf(
+            data["tumor_size"] = result.get("tumor_size", {})
+            pdf_bytes = generate_pdf(
                 data=data,
                 report_text=report_text,
                 original_image_path=st.session_state.file_path,
