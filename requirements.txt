@@ -1,0 +1,13 @@
+streamlit
+torch
+torchvision
+numpy
+opencv-python-headless
+timm
+albumentations
+grad-cam
+Pillow
+reportlab
+openai
+python-dotenv
+pydicom
