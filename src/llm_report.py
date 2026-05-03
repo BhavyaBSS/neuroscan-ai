@@ -30,18 +30,26 @@ def prepare_llm_input(result, patient_info=None):
     else:
         certainty = "high"
 
+    # ── ADD THIS ──
+    tumor_size = result.get("tumor_size", {})
+    tumor_size_str = ""
+    if tumor_size and tumor_size.get("size_category") not in ("None", None):
+        tumor_size_str = (
+            f"Tumor Size Category: {tumor_size.get('size_category', 'N/A')}, "
+            f"Estimated Diameter: {tumor_size.get('diameter_cm', 'N/A')} cm, "
+            f"Brain Coverage: {tumor_size.get('tumor_pct_of_brain', 'N/A')}%"
+        )
+
     data = {
         "diagnosis":         result["prediction"],
         "confidence":        confidence_percent,
         "certainty":         certainty,
         "prediction_model":  result["prediction_model"],
         "explanation_model": result["explanation_model"],
-        "observation":       result.get(
-            "observation",
-            "Highlighted regions indicate abnormal patterns"
-        ),
+        "observation":       result.get("observation", "Highlighted regions indicate abnormal patterns"),
         "xai_summary":            result.get("xai_summary", {}),
         "confidence_breakdown":   result.get("confidence_breakdown", {}),
+        "tumor_size_str":    tumor_size_str,  # ← ADD THIS
     }
 
     if patient_info:
@@ -92,15 +100,19 @@ def generate_report(data):
         Certainty Level: {data['certainty']}
         AI Model Used: {data['prediction_model']}
         What the scan shows: {data['observation']}
+
+        Tumor Size Information: {data.get('tumor_size_str', 'Not available')}
+
         {xai_context}
 
         Write a report with EXACTLY these 5 sections using these exact headings:
 
         **SUMMARY**
-        In 2-3 simple sentences, explain what was found in plain English.
+        In 2-3 simple sentences, explain what was found including the tumor size category if available.
 
         **WHAT THIS MEANS**
-        Explain what this type of tumor is in simple terms. What part of the brain is affected?
+        Explain what this type of tumor is in simple terms. Mention the estimated size and what 
+        that might mean for the patient. What part of the brain is affected?
         Mention which region the AI focused on during analysis and what that suggests.
 
         **AI EXPLANATION (HOW THE AI DECIDED)**
