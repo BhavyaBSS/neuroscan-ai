@@ -314,6 +314,43 @@ def generate_pdf(data, report_text, original_image_path, gradcam_image_path, lim
     ]))
     story.append(img_table)
 
+    # ── TUMOR SIZE SECTION ───────────────────────────────────
+    tumor_size_str = data.get("tumor_size_str", "")
+    if tumor_size_str:
+        story.append(Paragraph("Tumor Size Estimation", section_heading))
+        story.append(HRFlowable(width="100%", thickness=1,
+                                color=colors.HexColor('#dddddd'), spaceAfter=6))
+
+        # Parse values from string
+        parts = tumor_size_str.split(", ")
+        size_cat = parts[0].replace("Tumor Size Category: ", "") if len(parts) > 0 else "N/A"
+        diameter = parts[1].replace("Estimated Diameter: ", "") if len(parts) > 1 else "N/A"
+        coverage = parts[2].replace("Brain Coverage: ", "") if len(parts) > 2 else "N/A"
+
+        tumor_rows = [
+            [Paragraph("Size Category", xai_label_style),
+             Paragraph(size_cat, value_style)],
+            [Paragraph("Estimated Diameter", xai_label_style),
+             Paragraph(diameter, value_style)],
+            [Paragraph("Brain Area Coverage", xai_label_style),
+             Paragraph(coverage, value_style)],
+            [Paragraph("Note", xai_label_style),
+             Paragraph("Pixel-based estimate assuming 0.3mm/pixel. Not a clinical measurement.",
+                       xai_value_style)],
+        ]
+        tumor_table = Table(tumor_rows, colWidths=[2.4*inch, 4.2*inch])
+        tumor_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#f8fafc')),
+            ('BOX',       (0, 0), (-1, -1), 0.5, colors.HexColor('#cccccc')),
+            ('INNERGRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#e0e0e0')),
+            ('TOPPADDING',    (0, 0), (-1, -1), 7),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 7),
+            ('LEFTPADDING',   (0, 0), (-1, -1), 10),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ]))
+        story.append(tumor_table)
+        story.append(Spacer(1, 10))
+
     # ── XAI SECTION ──────────────────────────────────────────
     xai = data.get("xai_summary", {})
     if xai:
