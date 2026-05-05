@@ -25,6 +25,7 @@ import os
 import re
 from datetime import datetime
 from zoneinfo import ZoneInfo
+from llm_report import ReportContext
 
 import streamlit as st
 from openai import OpenAI
@@ -431,8 +432,6 @@ written as a numbered list]
 
 
 def generate_report(data: dict, ctx: ReportContext | None = None) -> str:
-    if ctx is None:
-        ctx = ReportContext()
     """
     Call the LLM, sanitise the output, and assemble the final plain-text report.
 
@@ -450,7 +449,8 @@ def generate_report(data: dict, ctx: ReportContext | None = None) -> str:
         - Sanitised LLM body (SUMMARY / FINDINGS / IMPRESSION / RECOMMENDATION)
         - ONE disclaimer at the very end
     """
-    ctx = ReportContext()  # Captured once — IST, consistent everywhere
+    if ctx is None:
+        ctx = ReportContext()
 
     # ---- Call LLM ----
     try:
@@ -620,14 +620,8 @@ def _build_styles(raw: dict) -> dict:
 # ============================================================
 
 
-def generate_pdf(
-    data: dict,
-    report_text: str,
-    original_image_path:  str | None = None,
-    gradcam_image_path:   str | None = None,
-    lime_image_path:      str | None = None,
-    ctx: ReportContext | None = None,
-) -> bytes:
+def generate_pdf(data, report_text, original_image_path, gradcam_image_path, lime_image_path=None, ctx=None):
+    # ... function body ...
     """
     Render an Apollo-level hospital-grade PDF and return the raw bytes.
 

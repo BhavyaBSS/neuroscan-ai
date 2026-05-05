@@ -2874,7 +2874,8 @@ def page_dashboard():
                 time.sleep(0.6)
 
             result = run_pipeline(st.session_state.file_path)
-            st.session_state.ctx = result.get("ctx")
+            ctx = result.get("ctx")
+            
             pinfo  = {
                 "name":   st.session_state.get("patient_name") or st.session_state.get("user_name") or "Anonymous",
                 "age":    st.session_state.get("patient_age", "N/A"),
@@ -2882,13 +2883,13 @@ def page_dashboard():
             }
             data        = prepare_llm_input(result, pinfo)
             report_text = generate_report(data)
-            pdf_bytes   = generate_pdf(
+            pdf_bytes = generate_pdf(
                 data=data,
                 report_text=report_text,
-                original_image_path=st.session_state.file_path,
-                gradcam_image_path=result["explanation_plot_path"],
+                original_image_path=st.session_state.get("file_path"),
+                gradcam_image_path=result.get("explanation_plot_path"),
                 lime_image_path=None,
-                ctx=st.session_state.ctx
+                ctx=ctx
             )
             prog.progress(100); status.empty()
 
