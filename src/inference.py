@@ -282,7 +282,7 @@ def run_pipeline(image_path):
         "prediction_model":     "EfficientNet-B0",
         "explanation_model": "ResNet50 (Score-CAM)",
         "observation": (
-            f"GradCAM++ highlights the {region_info['dominant_region']} region "
+            f"Score-CAM highlights the {region_info['dominant_region']} region "
             f"with {region_info['coverage_pct']:.1f}% high-activation coverage."
         ),
         "explanation_plot_path": explanation_plot_path,

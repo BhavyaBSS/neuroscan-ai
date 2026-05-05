@@ -587,7 +587,7 @@ def generate_pdf(
         story.append(Paragraph("Heatmap Explanation Summary", S["section_heading"]))
         xai_rows = [
             [Paragraph("Visualisation Method",      S["label"]),
-             Paragraph(_safe_text(xai.get("method_used"), "GradCAM++"), S["body"])],
+             Paragraph(_safe_text(xai.get("method_used"), "Score-CAM"), S["body"])],
             [Paragraph("Dominant Active Region",    S["label"]),
              Paragraph(_safe_text(xai.get("dominant_region")),           S["body"])],
             [Paragraph("Top 3 Active Regions",      S["label"]),
