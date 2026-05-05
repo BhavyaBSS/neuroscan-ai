@@ -432,6 +432,7 @@ written as a numbered list]
 
 
 def generate_report(data: dict, ctx: ReportContext | None = None) -> str:
+    ctx = ReportContext()
     """
     Call the LLM, sanitise the output, and assemble the final plain-text report.
 
@@ -621,7 +622,9 @@ def _build_styles(raw: dict) -> dict:
 # ============================================================
 
 
-def generate_pdf(data, report_text, original_image_path, gradcam_image_path, lime_image_path=None, ctx=None):
+def generate_pdf(data, report_text, original_image_path, gradcam_image_path, lime_image_path=None):
+    ctx = ReportContext()
+    # ... rest of function unchanged
     # ... function body ...
     """
     Render an Apollo-level hospital-grade PDF and return the raw bytes.

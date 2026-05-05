@@ -272,13 +272,6 @@ def run_pipeline(image_path):
     llm_input = prepare_llm_input(result)
     from llm_report import ReportContext
 
-    ctx = ReportContext()
-
-    report = generate_report(llm_input, ctx)
-    result["ctx"] = ctx
-    
-    result["report"] = report
-
     return result
 
 
