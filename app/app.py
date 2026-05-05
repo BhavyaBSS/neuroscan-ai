@@ -37,7 +37,7 @@ st.set_page_config(
 )
 
 # ── Global CSS ────────────────────────────────────────────────────────────────
-st.markdown("""
+st.markdown(f"""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,500;0,700;0,900;1,300;1,500;1,700;1,900&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@300;400;500&display=swap');
 
@@ -1033,7 +1033,7 @@ def page_landing():
 # ══════════════════════════════════════════════════════════════════════════════
 def page_auth():
     # Extra CSS scoped to auth page only
-    st.markdown("""
+    st.markdown(f"""
     <style>
     .block-container {
         padding-top: 0 !important;
