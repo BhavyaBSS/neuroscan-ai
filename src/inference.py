@@ -236,79 +236,6 @@ def run_pipeline(image_path):
     cam_resized = cv2.resize(cam, (224, 224))
     region_info = analyse_cam_regions(cam_resized)
 
-    # # =========================
-    # # TUMOR SIZE ESTIMATION
-    # # =========================
-    # MM_PER_PIXEL = 0.25  # Assumed spacing for standard brain MRI (1.5T)
-    # tumor_size = {}
-
-    # if "no_tumor" not in pred_label.lower():
-    #     # Threshold CAM to get activation mask
-    #     threshold = 0.75  # higher threshold = tighter around actual tumor
-    #     tumor_mask = (cam_resized >= threshold).astype(np.uint8)
-
-    #     # Morphological cleanup to remove noise
-    #     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
-    #     tumor_mask = cv2.morphologyEx(tumor_mask, cv2.MORPH_OPEN, kernel)
-    #     tumor_mask = cv2.morphologyEx(tumor_mask, cv2.MORPH_CLOSE, kernel)
-
-    #     # Pixel counts
-    #     tumor_pixels = int(np.sum(tumor_mask))
-    #     total_pixels = 224 * 224
-
-    #     # Brain area — exclude dark background
-    #     img_gray = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY)
-    #     _, brain_mask = cv2.threshold(img_gray, 15, 255, cv2.THRESH_BINARY)
-    #     brain_pixels = int(np.sum(brain_mask > 0))
-    #     brain_pct = (tumor_pixels / brain_pixels * 100) if brain_pixels > 0 else 0.0
-
-    #     # Bounding box → estimated real-world diameter
-    #     contours, _ = cv2.findContours(tumor_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    #     bbox_info = {}
-    #     diameter_cm = None
-    #     if contours:
-    #         largest = max(contours, key=cv2.contourArea)
-    #         x, y, bw, bh = cv2.boundingRect(largest)
-    #         avg_dim_px = (bw + bh) / 2
-    #         diameter_cm = round((avg_dim_px * MM_PER_PIXEL) / 10, 2)
-    #         bbox_info = {
-    #             "width_px": bw,
-    #             "height_px": bh,
-    #             "width_cm": round((bw * MM_PER_PIXEL) / 10, 2),
-    #             "height_cm": round((bh * MM_PER_PIXEL) / 10, 2),
-    #         }
-
-    #     # Size category
-    #     if brain_pct < 2:
-    #         size_category = "Minimal / Trace"
-    #     elif brain_pct < 8:
-    #         size_category = "Small"
-    #     elif brain_pct < 20:
-    #         size_category = "Moderate"
-    #     else:
-    #         size_category = "Large"
-
-    #     tumor_size = {
-    #         "tumor_pixels":       tumor_pixels,
-    #         "brain_pixels":       brain_pixels,
-    #         "tumor_pct_of_brain": round(brain_pct, 2),
-    #         "diameter_cm":        diameter_cm,        # e.g. 1.8
-    #         "size_category":      size_category,      # Small / Moderate / Large
-    #         "bbox":               bbox_info,
-    #         "note": "Pixel-based estimate assuming 0.7mm/pixel. Not a clinical measurement."
-    #     }
-    # else:
-    #     # No tumor detected — return empty/zero size info
-    #     tumor_size = {
-    #         "tumor_pixels":       0,
-    #         "brain_pixels":       0,
-    #         "tumor_pct_of_brain": 0.0,
-    #         "diameter_cm":        None,
-    #         "size_category":      "None",
-    #         "bbox":               {},
-    #         "note":               "No tumor detected."
-    #     }
-
     # =========================
     # XAI SUMMARY
     # =========================
@@ -337,7 +264,6 @@ def run_pipeline(image_path):
         ),
         "explanation_plot_path": explanation_plot_path,
         "xai_summary":           xai_summary,
-        # "tumor_size":            tumor_size,          # <-- NEW
     }
 
     # =========================
