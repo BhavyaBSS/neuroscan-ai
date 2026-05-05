@@ -318,14 +318,6 @@ def generate_report(data: dict) -> str:
     sep  = "=" * 64
     thin = "-" * 64
 
-    disclaimer = (
-        "The findings and recommendations in this report are intended solely to assist "
-        "qualified medical professionals and do not constitute a definitive diagnosis. "
-        "This report must be reviewed and validated by a licensed healthcare professional "
-        "before any clinical decision is made. It should not replace a formal consultation "
-        "with a specialist."
-    )
-
     report = (
         f"MEDICAL REPORT\n"
         f"{sep}\n"
@@ -343,10 +335,7 @@ def generate_report(data: dict) -> str:
         f"Confidence : {confidence:.2f}%\n"
         f"Certainty  : {certainty}\n\n"
         f"{sep}\n\n"
-        f"{llm_body}\n\n"
-        f"{sep}\n"
-        f"DISCLAIMER\n"
-        f"{disclaimer}\n"
+        f"{llm_body}\n"
     )
 
     return report.strip()
