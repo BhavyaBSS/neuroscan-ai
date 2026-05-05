@@ -26,7 +26,6 @@ def get_logo_base64():
 
 # These 2 lines must be OUTSIDE the function
 logo_b64 = get_logo_base64()
-st.write(os.path.join(os.path.dirname(os.path.abspath(__file__)), "Logo.png"))  # temp debug
 
 
 # ── Page Config ───────────────────────────────────────────────────────────────
@@ -1050,7 +1049,7 @@ def page_auth():
         st.markdown("""
         <div class="auth-left">
             <div class="auth-grid-bg"></div>
-            <div class="auth-brain-icon">
+            <div class="auth-brain-icon" style="position:relative;z-index:1;">
                 <img src="data:image/png;base64,{logo_b64}" style="width:80px;height:80px;object-fit:contain;filter:drop-shadow(0 0 30px rgba(0,212,255,0.5));" />
             </div>
             <div class="auth-brand-name">Neuro<em>Scan</em> AI</div>
