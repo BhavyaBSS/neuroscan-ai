@@ -2992,19 +2992,26 @@ def page_dashboard():
         if has_report:
             pname = st.session_state.get("patient_name", "Patient")
             rtext = st.session_state.report_text
-            # Strip disclaimer block before displaying in UI
-            if "DISCLAIMER" in rtext:
-                rtext = rtext[:rtext.rfind("DISCLAIMER")].strip()
-            if "====" in rtext:
-                # Remove trailing separator line
-                lines = rtext.split("\n")
-                while lines and lines[-1].strip().startswith("="):
-                    lines.pop()
-                rtext = "\n".join(lines).strip()
+
+            # Aggressively strip any disclaimer the LLM added
+            for marker in ["DISCLAIMER", "DISCLMER", "IMPORTANT DISCLAIMER",
+                            "IMPORTANT NOTE", "Please note", "Please remember",
+                            "This report was generated"]:
+                if marker.upper() in rtext.upper():
+                    idx = rtext.upper().rfind(marker.upper())
+                    rtext = rtext[:idx].strip()
+
+            # Remove trailing separator lines
+            lines = rtext.split("\n")
+            while lines and set(lines[-1].strip()) <= {"=", "-", " "}:
+                lines.pop()
+            rtext = "\n".join(lines).strip()
+
             st.markdown(
-            f'<div class="report-scroll">{rtext.replace(chr(10), "<br>")}</div>',
-            unsafe_allow_html=True
-        )
+                f'<div class="report-scroll">{rtext.replace(chr(10), "<br>")}</div>',
+                unsafe_allow_html=True
+            )
+
             st.markdown("<div style='height:14px'></div>", unsafe_allow_html=True)
             st.download_button(
                 label="⬇  Download PDF Report",

@@ -136,6 +136,15 @@ def _sanitize(text: str) -> str:
         cleaned = cleaned.replace(old, new)
     cleaned = re.sub(r"\bAI\b", "", cleaned, flags=re.IGNORECASE)
     cleaned = re.sub(r"\bA\.I\.\b", "", cleaned, flags=re.IGNORECASE)
+    
+    # ── Strip any disclaimer block the LLM generates ──
+    for marker in ["DISCLAIMER", "DISCLMER", "IMPORTANT DISCLAIMER",
+                   "IMPORTANT NOTE", "Please note", "Please remember",
+                   "This report was generated", "should not be considered"]:
+        if marker.upper() in cleaned.upper():
+            idx = cleaned.upper().rfind(marker.upper())
+            cleaned = cleaned[:idx].strip()
+
     cleaned = re.sub(r"[ \t]{2,}", " ", cleaned)
     cleaned = re.sub(r"\n{3,}", "\n\n", cleaned)
     return cleaned.strip()
@@ -278,6 +287,9 @@ IMPRESSION
 
 RECOMMENDATION
 [3–4 specific numbered actionable follow-up steps for the physician]
+
+STOP after RECOMMENDATION. Do NOT add any disclaimer, note, warning,
+or any text after the RECOMMENDATION section. End immediately.
 """
 
 
