@@ -2541,7 +2541,7 @@ def page_landing():
                 <div class="ns-feature-desc">Deep residual network trained on curated MRI datasets delivering class-leading accuracy across all tumor types.</div>
             </div>
             <div class="ns-feature-card">
-                <div class="ns-feature-name">Grad-CAM Heatmaps</div>
+                <div class="ns-feature-name">Score-CAM Heatmaps</div>
                 <div class="ns-feature-desc">Visual saliency maps highlight the exact pixel regions driving each AI decision. Zero black box — full transparency.</div>
             </div>
             <div class="ns-feature-card">
