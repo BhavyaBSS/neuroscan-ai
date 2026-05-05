@@ -2317,6 +2317,11 @@ body::after {
 
 # ── Session State Init ─────────────────────────────────────────────────────────
 def init_state():
+    CACHE_VERSION = "v3"  # bump this to force full reset
+    if st.session_state.get("_cache_version") != CACHE_VERSION:
+        st.session_state.clear()
+        st.session_state["_cache_version"] = CACHE_VERSION
+
     defaults = {
         "page":              "landing",
         "auth_tab":          "signin",
