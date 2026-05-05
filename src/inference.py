@@ -77,45 +77,68 @@ def load_resnet():
 efficientnet_model = load_efficientnet()
 resnet_model = load_resnet()
 
-# ============================================================
-# GRAD-CAM++ CLASS 
-# ============================================================
-class GradCAMPlusPlus:
+# REMOVE entire GradCAMPlusPlus class and replace with:
+
+class ScoreCAM:
     def __init__(self, model, target_layer):
         self.model = model
         self.target_layer = target_layer
-
-        self.gradients = None
         self.activations = None
-
         self.target_layer.register_forward_hook(self._save_activation)
-        self.target_layer.register_full_backward_hook(self._save_gradient)
 
     def _save_activation(self, module, input, output):
-        self.activations = output
+        self.activations = output.detach()
 
-    def _save_gradient(self, module, grad_input, grad_output):
-        self.gradients = grad_output[0]
+    def generate(self, input_tensor, class_idx):
+        # Step 1: get activations
+        with torch.no_grad():
+            self.model(input_tensor)
 
-    def generate(self, input_image, class_idx):
-        output = self.model(input_image)
+        activations = self.activations[0]  # (C, H, W)
+        n_channels = activations.shape[0]
 
-        self.model.zero_grad()
-        loss = output[0, class_idx]
-        loss.backward()
+        # ── ADD THESE 4 LINES HERE ──
+        K = 256  # use top 256 channels instead of all 2048
+        mean_acts = activations.mean(dim=(1, 2))
+        top_k_idx = torch.argsort(mean_acts, descending=True)[:K]
+        # ────────────────────────────  
 
-        gradients = self.gradients[0]        # (C, H, W)
-        activations = self.activations[0]    # (C, H, W)
+        # Step 2: get baseline score (pure black image)
+        baseline = torch.zeros_like(input_tensor).to(device)
+        with torch.no_grad():
+            baseline_out = self.model(baseline)
+            baseline_score = torch.softmax(baseline_out, dim=1)[0, class_idx].item()
 
-        # ── Grad-CAM++ weight formula ──────────────────────────────
-        grad_sq  = gradients ** 2
-        grad_cu  = gradients ** 3
+        # Step 3: for each activation map, mask input and get score
+        scores = []
+        for i in range(n_channels):
+            # Upsample single activation map to input size
+            act_map = activations[i].unsqueeze(0).unsqueeze(0)  # (1,1,H,W)
+            act_map = torch.nn.functional.interpolate(
+                act_map, size=(224, 224), mode='bilinear', align_corners=False
+            )
+            act_map = act_map.squeeze()  # (224, 224)
 
-        denom = 2 * grad_sq + (grad_cu * activations).sum(dim=(1, 2), keepdim=True)
-        denom = torch.where(denom != 0, denom, torch.ones_like(denom))
+            # Normalize to [0, 1]
+            act_min = act_map.min()
+            act_max = act_map.max()
+            if act_max - act_min > 1e-8:
+                act_map = (act_map - act_min) / (act_max - act_min)
+            else:
+                act_map = torch.zeros_like(act_map)
 
-        alpha = grad_sq / denom                          # (C, H, W)
-        weights = (alpha * torch.relu(gradients)).sum(dim=(1, 2))  # (C,)
+            # Mask the input image
+            masked = input_tensor * act_map.unsqueeze(0).unsqueeze(0)
+
+            with torch.no_grad():
+                out = self.model(masked)
+                score = torch.softmax(out, dim=1)[0, class_idx].item()
+
+            scores.append(score - baseline_score)
+
+        # Step 4: weighted sum of activation maps
+        scores = torch.tensor(scores).to(device)
+        weights = torch.relu(scores)  # only positive contributions
 
         cam = torch.zeros(activations.shape[1:], dtype=torch.float32).to(device)
         for i, w in enumerate(weights):
@@ -218,9 +241,9 @@ def run_pipeline(image_path):
     # =========================
     # GRAD-CAM++ (ResNet)
     # =========================
-    target_layer  = get_target_layer(resnet_model)
-    gradcampp     = GradCAMPlusPlus(resnet_model, target_layer)
-    cam           = gradcampp.generate(input_tensor, pred_idx)
+    target_layer = get_target_layer(resnet_model)
+    scorecam     = ScoreCAM(resnet_model, target_layer)
+    cam          = scorecam.generate(input_tensor, pred_idx)
 
     # =========================
     # GRAD-CAM++ HEATMAP
@@ -240,7 +263,7 @@ def run_pipeline(image_path):
     # XAI SUMMARY
     # =========================
     xai_summary = {
-        "method_used":        "GradCAM++",
+        "method_used":        "Score-CAM",
         "dominant_region":    region_info["dominant_region"],
         "top3_regions":       region_info["top3_regions"],
         "cam_coverage_pct":   round(region_info["coverage_pct"], 1),
@@ -257,7 +280,7 @@ def run_pipeline(image_path):
         "confidence":           conf,
         "confidence_breakdown": confidence_breakdown,
         "prediction_model":     "EfficientNet-B0",
-        "explanation_model":    "ResNet50 (GradCAM++)",
+        "explanation_model": "ResNet50 (Score-CAM)",
         "observation": (
             f"GradCAM++ highlights the {region_info['dominant_region']} region "
             f"with {region_info['coverage_pct']:.1f}% high-activation coverage."
@@ -271,6 +294,8 @@ def run_pipeline(image_path):
     # =========================
     llm_input = prepare_llm_input(result)
     from llm_report import ReportContext
+
+    result["report"] = generate_report(llm_input)
 
     return result
 
