@@ -2877,14 +2877,14 @@ def page_dashboard():
                 "gender": st.session_state.get("patient_gender", "N/A"),
             }
             data        = prepare_llm_input(result, pinfo)
-            report_text = generate_report(data)
+            report_text = generate_report(data)          # no ctx
             pdf_bytes   = generate_pdf(
                 data=data,
                 report_text=report_text,
                 original_image_path=st.session_state.get("file_path"),
                 gradcam_image_path=result.get("explanation_plot_path"),
                 lime_image_path=None,
-            )
+            )     
             prog.progress(100); status.empty()
 
             st.session_state.result      = result
