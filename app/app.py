@@ -13,6 +13,15 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "s
 from inference import run_pipeline
 from llm_report import prepare_llm_input, generate_report, generate_pdf
 
+import base64
+
+def get_logo_base64():
+    logo_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Logo.png")
+    with open(logo_path, "rb") as f:
+        return base64.b64encode(f.read()).decode()
+
+logo_b64 = get_logo_base64()
+
 
 # ── Page Config ───────────────────────────────────────────────────────────────
 st.set_page_config(
@@ -805,9 +814,11 @@ def page_landing():
         st.markdown("""
         <div class="ns-nav" style="padding:12px 24px;">
             <div class="ns-logo">
-                <div class="ns-logo-mark" style="font-family:'Fraunces',serif;font-size:13px;font-weight:900;color:#07090f;letter-spacing:-0.5px;">NS</div>
-                <span class="ns-logo-text">Neuro<em>Scan</em> AI</span>
+            <div class="ns-logo-mark" style="background:transparent;box-shadow:none;padding:0;">
+                <img src="data:image/png;base64,{logo_b64}" style="width:36px;height:36px;object-fit:contain;border-radius:8px;" />
             </div>
+            <span class="ns-logo-text">Neuro<em>Scan</em> AI</span>
+        </div>
         </div>""", unsafe_allow_html=True)
     with nav_r1:
         st.markdown("<div style='padding-top:8px'>", unsafe_allow_html=True)
@@ -1033,7 +1044,9 @@ def page_auth():
         st.markdown("""
         <div class="auth-left">
             <div class="auth-grid-bg"></div>
-            <div class="auth-brain-icon" style="font-family:'Fraunces',serif;font-size:48px;font-weight:900;color:var(--cyan);filter:drop-shadow(0 0 30px rgba(0,212,255,0.5));position:relative;z-index:1;">NS</div>
+            <div class="auth-brain-icon">
+                <img src="data:image/png;base64,{logo_b64}" style="width:80px;height:80px;object-fit:contain;filter:drop-shadow(0 0 30px rgba(0,212,255,0.5));" />
+            </div>
             <div class="auth-brand-name">Neuro<em>Scan</em> AI</div>
             <div class="auth-brand-desc">
                 Explainable AI brain tumor detection —
@@ -1175,7 +1188,9 @@ def page_dashboard():
         <div class="dash-topbar" style="position:relative;z-index:10;">
             <div style="display:flex;align-items:center;gap:16px;">
                 <div class="dash-logo">
-                    <div class="dash-logo-mark" style="font-family:'Fraunces',serif;font-size:12px;font-weight:900;color:#07090f;">NS</div>
+                    <div class="dash-logo-mark" style="background:transparent;box-shadow:none;">
+                        <img src="data:image/png;base64,{logo_b64}" style="width:32px;height:32px;object-fit:contain;border-radius:7px;" />
+                    </div>
                     <span class="dash-logo-txt">Neuro<em>Scan</em> AI</span>
                 </div>
                 <div class="dash-breadcrumb">
