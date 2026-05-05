@@ -311,23 +311,6 @@ def prepare_llm_input(result: dict, patient_info: dict | None = None) -> dict:
 
 
 def _build_prompt(data: dict) -> str:
-    """
-    Construct the full user-turn prompt sent to the LLM.
-
-    The system-level constraints are embedded inline because the Groq
-    endpoint is called via a single ``user`` message; they are equally
-    enforceable this way.
-
-    Constraints enforced in the prompt
-    ------------------------------------
-    - Exact four headings: SUMMARY / FINDINGS / IMPRESSION / RECOMMENDATION
-    - Absolute ban on: AI, artificial intelligence, model, algorithm,
-      machine learning, deep learning, neural network, system, software
-    - No disclaimer — added separately after LLM output
-    - No repetition of patient details or report title
-    - Formal, first-person-plural clinical voice
-    - Confidence certainty phrasing table
-    """
     patient_name = _safe_text(data.get("name"))
     age          = _safe_text(data.get("age"))
     gender       = _safe_text(data.get("gender"))
@@ -348,81 +331,70 @@ def _build_prompt(data: dict) -> str:
         if breakdown else "Not available"
     )
 
-    return f"""You are a senior consultant radiologist authoring a formal MRI brain scan report
-for a tertiary-care hospital record. This report will be signed off by a physician and
-placed in the patient's medical file.
+    return f"""You are a senior consultant radiologist writing a formal MRI brain scan report
+for a tertiary-care hospital record. Write exactly as a human radiologist would —
+in first-person plural clinical voice. This report will be placed directly in the
+patient's medical file and signed off by a physician.
 
 ══════════════════════════════════════════
-MANDATORY FORMATTING RULES  (non-negotiable)
+ABSOLUTE RULES — ZERO EXCEPTIONS
 ══════════════════════════════════════════
-1.  Use EXACTLY these four headings, in this order, with nothing before, between,
-    or after except the content of each section:
-        SUMMARY
-        FINDINGS
-        IMPRESSION
-        RECOMMENDATION
+1. Use EXACTLY these four headings in this order:
+       SUMMARY
+       FINDINGS
+       IMPRESSION
+       RECOMMENDATION
 
-2.  FORBIDDEN WORDS — you MUST NOT write any of the following, in any form,
-    capitalisation, or spelling variation:
-        AI, A.I., artificial intelligence, model, algorithm, machine learning,
-        deep learning, neural network, automated system,
-        computer, automated, automation, technology, tool, platform, application.
+2. COMPLETELY FORBIDDEN — never write these words in any form:
+       AI, A.I., artificial intelligence, artificial, automated,
+       automation, model, algorithm, machine learning, deep learning,
+       neural network, computer, software, technology, tool, platform,
+       system, detection system, generated, auto-generated,
+       automated detection, computed detection.
 
-    Write as though you, a radiologist, personally reviewed and interpreted the scan.
+3. Write as though YOU personally reviewed the scan.
+   Use: "We observe…", "Our analysis…", "Findings indicate…",
+   "We recommend…", "The scan demonstrates…", "Imaging reveals…"
 
-3.  Do NOT include a Disclaimer section. It will be appended separately.
+4. NO disclaimer — added separately.
+4. NO patient name, age, gender, or report title — already in header.
+5. Each section: 2–4 sentences only. Formal, concise, clinical.
 
-4.  Do NOT repeat the patient's name, age, gender, report title, or any metadata.
-    Those appear in the document header; your output is the clinical body only.
-
-5.  Language register: formal, concise, clinical. Each section: 2–4 sentences maximum.
-    Use first-person plural: "We observe…", "Our analysis indicates…",
-    "Findings are consistent with…", "We recommend…"
-
-6.  Confidence certainty phrasing — choose the ONE matching phrase:
-    - Certainty = High     → "Our analysis is highly confident in this diagnosis."
-    - Certainty = Moderate → "Our analysis is moderately confident in this diagnosis."
-    - Certainty = Low      → "Our analysis is made with limited confidence; further
-                               evaluation is strongly advised."
-
-7.  Do not begin any sentence with a forbidden word. Do not use synonyms such as
-    "detection system", "automated detection", "computed detection", or similar.
+6. Confidence phrasing — use exactly ONE:
+   - High     → "Our analysis is highly confident in this diagnosis."
+   - Moderate → "Our analysis is moderately confident in this diagnosis."
+   - Low      → "Findings are made with limited confidence; further evaluation is strongly advised."
 
 ══════════════════════════════════════════
 CLINICAL DATA
 ══════════════════════════════════════════
-Patient Name       : {patient_name}
-Age / Gender       : {age} / {gender}
-
 Diagnosis          : {diagnosis}
 Confidence Score   : {confidence:.2f}%
 Certainty Level    : {certainty}
 Observation        : {observation}
 
-Visualisation Method   : {method}
-Dominant Active Region : {dom_region}
-Top 3 Active Regions   : {top3}
+Visualisation Method    : {method}
+Dominant Active Region  : {dom_region}
+Top 3 Active Regions    : {top3}
 High-Activation Coverage: {coverage}%
 
-Class-Wise Confidence  : {breakdown_str}
+Class-Wise Confidence   : {breakdown_str}
 
 ══════════════════════════════════════════
-EXACT OUTPUT TEMPLATE  (follow precisely)
+OUTPUT TEMPLATE — follow exactly
 ══════════════════════════════════════════
 SUMMARY
 [2–3 sentences: key finding, diagnosis, confidence statement]
 
 FINDINGS
-[3–4 sentences: detailed radiological observation referencing active regions,
-coverage, and class-wise confidence breakdown]
+[3–4 sentences: detailed radiological observations referencing
+active regions, coverage, and class-wise confidence breakdown]
 
 IMPRESSION
-[2–3 sentences: clinical interpretation — what these findings most likely represent
-and their radiological significance]
+[2–3 sentences: clinical interpretation and radiological significance]
 
 RECOMMENDATION
-[3–4 specific, actionable follow-up steps the treating physician should consider,
-written as a numbered list]
+[3–4 specific numbered actionable follow-up steps for the physician]
 """
 
 
@@ -486,12 +458,13 @@ def generate_report(data: dict, ctx: ReportContext | None = None) -> str:
 
     # Single disclaimer authored here (only place "AI" is permitted)
     disclaimer = (
-        "This report is generated using automated imaging analysis tools "
-        "and must be reviewed and validated by a qualified, licensed healthcare "
-        "professional before any clinical decision is made. It does not constitute "
-        "a definitive diagnosis and should not replace a formal consultation with "
-        "a specialist."
-    )
+    "DISCLAIMER: The findings and recommendations in this report are intended "
+    "solely to assist qualified medical professionals and do not constitute a "
+    "definitive diagnosis. This report has been prepared using advanced imaging "
+    "analysis and must be reviewed and validated by a licensed healthcare "
+    "professional before any clinical decision is made. It should not replace "
+    "a formal consultation with a specialist."
+)
 
     sep  = "=" * 64
     thin = "-" * 64
@@ -944,13 +917,14 @@ def generate_pdf(data, report_text, original_image_path, gradcam_image_path, lim
         width="100%", thickness=0.8, color=S["rule_grey"],
         spaceAfter=7, spaceBefore=2,
     ))
+    # REPLACE WITH:
     story.append(Paragraph(
-        "<b>DISCLAIMER:</b> This report is generated using automated imaging analysis "
-        "tools and must be reviewed and validated by a qualified, licensed healthcare "
-        "professional before any clinical decision is made. It does not constitute a "
-        "definitive diagnosis and should not replace a formal consultation with a "
-        "specialist.",
-        S["disclaimer"],
+        "<b>DISCLAIMER:</b> The findings and recommendations in this report are intended "
+            "solely to assist qualified medical professionals and do not constitute a definitive "
+            "diagnosis. This report has been prepared using advanced imaging analysis and must "
+            "be reviewed and validated by a licensed healthcare professional before any clinical "
+            "decision is made. It should not replace a formal consultation with a specialist.",
+            S["disclaimer"],
     ))
 
     # --------------------------------------------------------
