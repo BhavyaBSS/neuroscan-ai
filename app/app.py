@@ -17,7 +17,7 @@ from llm_report import prepare_llm_input, generate_report, generate_pdf
 # ── Page Config ───────────────────────────────────────────────────────────────
 st.set_page_config(
     page_title="NeuroScan AI · Brain Tumor Detection",
-    page_icon="🧠",
+    page_icon="app/Logo.jpeg",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
