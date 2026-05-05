@@ -17,10 +17,19 @@ import base64
 
 def get_logo_base64():
     logo_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Logo.png")
-    with open(logo_path, "rb") as f:
-        return base64.b64encode(f.read()).decode()
+    try:
+        with open(logo_path, "rb") as f:
+            return base64.b64encode(f.read()).decode()
+    except FileNotFoundError:
+        print(f"Logo not found at: {logo_path}")
+        return ""
+    
+    logo_b64 = get_logo_base64()
+    print("Logo path:", os.path.join(os.path.dirname(os.path.abspath(__file__)), "Logo.png"))
+    print("Logo loaded:", len(logo_b64) > 0)
 
-logo_b64 = get_logo_base64()
+    logo_b64 = get_logo_base64()
+    st.write(os.path.join(os.path.dirname(os.path.abspath(__file__)), "Logo.png"))  # temp debug
 
 
 # ── Page Config ───────────────────────────────────────────────────────────────
