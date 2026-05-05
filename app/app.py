@@ -1033,7 +1033,7 @@ def page_landing():
 # ══════════════════════════════════════════════════════════════════════════════
 def page_auth():
     # Extra CSS scoped to auth page only
-    st.markdown(f"""
+    st.markdown("""
     <style>
     .block-container {
         padding-top: 0 !important;
