@@ -612,6 +612,7 @@ def _build_styles(raw: dict) -> dict:
             textColor=grey_text,
         ),
     }
+    S["raw"] = raw
     return S
 
 
@@ -890,7 +891,7 @@ def generate_pdf(data, report_text, original_image_path, gradcam_image_path, lim
 
                 cell_style = ParagraphStyle(
                     f"GC_{key.replace('-', '_')}",
-                    parent=raw_styles["Normal"],
+                    parent=S["raw"]["Normal"],
                     fontName="Helvetica-Bold",
                     fontSize=8, leading=11,
                     alignment=1, textColor=txt_c,
