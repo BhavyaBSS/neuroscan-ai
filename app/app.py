@@ -2794,7 +2794,13 @@ def page_dashboard():
                 with cb:
                     if not has_result:
                         if st.button("Analyze Now", key="do_analyze",
-                                     type="primary", use_container_width=True):
+                            type="primary", use_container_width=True):
+
+                            # 🔥 RESET OLD DATA
+                            st.session_state.report_text = None
+                            st.session_state.pdf_bytes = None
+                            st.session_state.result = None
+
                             st.session_state._analyzing = True
                             st.rerun()
             else:
@@ -2868,6 +2874,7 @@ def page_dashboard():
                 time.sleep(0.6)
 
             result = run_pipeline(st.session_state.file_path)
+            st.session_state.ctx = result.get("ctx")
             pinfo  = {
                 "name":   st.session_state.get("patient_name") or st.session_state.get("user_name") or "Anonymous",
                 "age":    st.session_state.get("patient_age", "N/A"),
@@ -2881,6 +2888,7 @@ def page_dashboard():
                 original_image_path=st.session_state.file_path,
                 gradcam_image_path=result["explanation_plot_path"],
                 lime_image_path=None,
+                ctx=st.session_state.ctx
             )
             prog.progress(100); status.empty()
 

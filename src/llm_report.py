@@ -458,7 +458,7 @@ def generate_report(data: dict, ctx: ReportContext | None = None) -> str:
         response = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=[{"role": "user", "content": _build_prompt(data)}],
-            temperature=0.10,   # Near-deterministic for clinical reproducibility
+            temperature=0.3,   # Near-deterministic for clinical reproducibility
             max_tokens=1024,
         )
         llm_raw  = response.choices[0].message.content or ""
