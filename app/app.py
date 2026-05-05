@@ -37,7 +37,7 @@ st.set_page_config(
 )
 
 # ── Global CSS ────────────────────────────────────────────────────────────────
-st.markdown(f"""
+st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,500;0,700;0,900;1,300;1,500;1,700;1,900&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@300;400;500&display=swap');
 
@@ -816,7 +816,7 @@ def page_landing():
     # ── Nav ────────────────────────────────────────────────────────────────────
     nav_l, _, nav_r1, nav_r2 = st.columns([5, 2, 0.9, 0.9])
     with nav_l:
-        st.markdown("""
+        st.markdown(f"""
         <div class="ns-nav" style="padding:12px 24px;">
             <div class="ns-logo">
             <div class="ns-logo-mark" style="background:transparent;box-shadow:none;padding:0;">
@@ -1046,7 +1046,7 @@ def page_auth():
 
     # ── Left panel ─────────────────────────────────────────────────────────────
     with left:
-        st.markdown("""
+        st.markdown(f"""
         <div class="auth-left">
             <div class="auth-grid-bg"></div>
             <div class="auth-brain-icon" style="position:relative;z-index:1;">
