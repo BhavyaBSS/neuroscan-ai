@@ -1639,7 +1639,7 @@ st.markdown("""
 
 @media (max-width: 480px) {
     .ns-hero-h1 { font-size: 28px !important; }
-    .ns-stats { grid-template-columns: 1fr 1fr !important; }
+    .ns-stats { grid-template-columns: 1fr !important; }
     .ns-feature-grid { grid-template-columns: 1fr !important; }
     .ns-section-title { font-size: 28px !important; }
     .ns-cta-title { font-size: 24px !important; }
@@ -1801,7 +1801,7 @@ body::after {
 
 /* Stats strip */
 .ns-stats {
-    display: grid; grid-template-columns: repeat(4,1fr);
+    display: grid; grid-template-columns: repeat(3,1fr);
     border-top: 1px solid var(--border);
     border-bottom: 1px solid var(--border);
     background: var(--surface);
@@ -1823,9 +1823,10 @@ body::after {
 }
 .ns-stat-val {
     font-family: 'Fraunces', serif;
-    font-size: 32px; font-weight: 900; color: var(--cyan);
-    letter-spacing: -1px; line-height: 1;
+    font-size: clamp(16px, 2.5vw, 32px); font-weight: 900; color: var(--cyan);
+    letter-spacing: -0.5px; line-height: 1.2;
     margin-bottom: 6px;
+    word-break: break-word;
 }
 .ns-stat-label {
     font-family: 'DM Mono', monospace;
@@ -2501,7 +2502,6 @@ def page_landing():
                         st.warning(f"Not found:\n{path}")
 
     # ── Stats strip ────────────────────────────────────────────────────────────
-    st.markdown("<div style='margin-top:60px'></div>", unsafe_allow_html=True)
     st.markdown("""
     <div class="ns-stats">
         <div class="ns-stat">
@@ -2513,12 +2513,8 @@ def page_landing():
             <div class="ns-stat-label">Time to Full Report</div>
         </div>
         <div class="ns-stat">
-            <div class="ns-stat-val">EfficientNetB0</div>
-            <div class="ns-stat-label">Deep Learning Model</div>
-        </div>
-        <div class="ns-stat">
-            <div class="ns-stat-val">Grad-CAM</div>
-            <div class="ns-stat-label">Visual Explainability</div>
+            <div class="ns-stat-val">Visual Explainability</div>
+            <div class="ns-stat-label">Grad-CAM Powered</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
