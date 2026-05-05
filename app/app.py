@@ -2459,7 +2459,7 @@ def page_landing():
         # ── Video ──────────────────────────────────────────────────────────────
         if st.session_state.show_video:
             st.markdown("<div style='margin-top:32px'></div>", unsafe_allow_html=True)
-            st.video("https://youtu.be/sMCbnhHhj7w")
+            st.video("https://youtu.be/12r392eTpTg")
 
         # ── Demo Gallery ───────────────────────────────────────────────────────
         if st.session_state.show_demo:
