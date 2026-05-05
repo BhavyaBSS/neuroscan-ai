@@ -17,7 +17,7 @@ from llm_report import prepare_llm_input, generate_report, generate_pdf
 # ── Page Config ───────────────────────────────────────────────────────────────
 st.set_page_config(
     page_title="NeuroScan AI · Brain Tumor Detection",
-    page_icon="app/Logo.jpeg",
+    page_icon="Logo.png",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
@@ -485,7 +485,10 @@ body::after {
 .panel-icon {
     width: 38px; height: 38px; border-radius: 9px;
     display: flex; align-items: center; justify-content: center;
-    font-size: 18px;
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
 }
 .panel-icon.blue  { background: rgba(0,212,255,0.12); }
 .panel-icon.teal  { background: rgba(0,229,160,0.10); }
@@ -802,7 +805,7 @@ def page_landing():
         st.markdown("""
         <div class="ns-nav" style="padding:12px 24px;">
             <div class="ns-logo">
-                <div class="ns-logo-mark">🧠</div>
+                <div class="ns-logo-mark" style="font-family:'Fraunces',serif;font-size:13px;font-weight:900;color:#07090f;letter-spacing:-0.5px;">NS</div>
                 <span class="ns-logo-text">Neuro<em>Scan</em> AI</span>
             </div>
         </div>""", unsafe_allow_html=True)
@@ -863,18 +866,18 @@ def page_landing():
         # ── Action buttons ─────────────────────────────────────────────────────
         b1, b2, b3 = st.columns(3)
         with b1:
-            if st.button("🚀  Launch Dashboard", key="hero_launch",
+            if st.button(" Launch Dashboard", key="hero_launch",
                          type="primary", use_container_width=True):
                 st.session_state.page = "auth"
                 st.rerun()
         with b2:
-            demo_label = "✕  Close Demo" if st.session_state.show_demo else "🔍  Guest Demo"
+            demo_label = "✕  Close Demo" if st.session_state.show_demo else "Guest Demo"
             if st.button(demo_label, key="hero_demo", use_container_width=True):
                 st.session_state.show_demo  = not st.session_state.show_demo
                 st.session_state.show_video = False
                 st.rerun()
         with b3:
-            vid_label = "✕  Close Video" if st.session_state.show_video else "🎥  How It Works"
+            vid_label = "✕  Close Video" if st.session_state.show_video else "How It Works"
             if st.button(vid_label, key="hero_vid", use_container_width=True):
                 st.session_state.show_video = not st.session_state.show_video
                 st.session_state.show_demo  = False
@@ -964,26 +967,26 @@ def page_landing():
         <div class="ns-feature-grid">
             <div class="ns-feature-card">
                 <div class="ns-feature-num"></div>
-                <span class="ns-feature-icon">🎯</span>
+                # <span class="ns-feature-icon"></span>
                 <div class="ns-feature-kpi">98.65%</div>
                 <div class="ns-feature-name">EfficientNetB0 Classification</div>
                 <div class="ns-feature-desc">Deep residual network trained on curated MRI datasets delivering class-leading accuracy across all tumor types.</div>
             </div>
             <div class="ns-feature-card">
                 <div class="ns-feature-num"></div>
-                <span class="ns-feature-icon">🔥</span>
+                # <span class="ns-feature-icon"></span>
                 <div class="ns-feature-name">Grad-CAM Heatmaps</div>
                 <div class="ns-feature-desc">Visual saliency maps highlight the exact pixel regions driving each AI decision. Zero black box — full transparency.</div>
             </div>
             <div class="ns-feature-card">
                 <div class="ns-feature-num"></div>
-                <span class="ns-feature-icon">📊</span>
+                # <span class="ns-feature-icon"></span>
                 <div class="ns-feature-name">Confidence Scoring</div>
                 <div class="ns-feature-desc">Per-class softmax confidence scores so you always know the model's certainty and when to seek a second opinion.</div>
             </div>
             <div class="ns-feature-card">
                 <div class="ns-feature-num"></div>
-                <span class="ns-feature-icon">📄</span>
+                # <span class="ns-feature-icon"></span>
                 <div class="ns-feature-name">LLM Clinical Reports</div>
                 <div class="ns-feature-desc">AI-generated radiologist-grade summaries distill findings into clear, actionable narrative — PDF-ready in seconds.</div>
             </div>
@@ -1039,7 +1042,7 @@ def page_auth():
         st.markdown("""
         <div class="auth-left">
             <div class="auth-grid-bg"></div>
-            <div class="auth-brain-icon">🧠</div>
+            <div class="auth-brain-icon" style="font-family:'Fraunces',serif;font-size:48px;font-weight:900;color:var(--cyan);filter:drop-shadow(0 0 30px rgba(0,212,255,0.5));position:relative;z-index:1;">NS</div>
             <div class="auth-brand-name">Neuro<em>Scan</em> AI</div>
             <div class="auth-brand-desc">
                 Explainable AI brain tumor detection —
@@ -1181,7 +1184,7 @@ def page_dashboard():
         <div class="dash-topbar" style="position:relative;z-index:10;">
             <div style="display:flex;align-items:center;gap:16px;">
                 <div class="dash-logo">
-                    <div class="dash-logo-mark">🧠</div>
+                    <div class="dash-logo-mark" style="font-family:'Fraunces',serif;font-size:12px;font-weight:900;color:#07090f;">NS</div>
                     <span class="dash-logo-txt">Neuro<em>Scan</em> AI</span>
                 </div>
                 <div class="dash-breadcrumb">
@@ -1209,7 +1212,7 @@ def page_dashboard():
         st.markdown("""
         <div class="panel">
             <div class="panel-header">
-                <div class="panel-icon blue">🖼️</div>
+                <div class="panel-icon blue"></div>
                 <div>
                     <div class="panel-title">MRI Scan Input</div>
                     <div class="panel-sub">upload or select sample</div>
@@ -1226,7 +1229,7 @@ def page_dashboard():
             if not is_analyzing:
                 ca, cb = st.columns(2)
                 with ca:
-                    if st.button("🔄  New Image", key="new_img", use_container_width=True):
+                    if st.button("New Image", key="new_img", use_container_width=True):
                         st.session_state.file_path   = None
                         st.session_state.result      = None
                         st.session_state.report_text = None
@@ -1235,7 +1238,7 @@ def page_dashboard():
                         st.rerun()
                 with cb:
                     if not has_result:
-                        if st.button("🔍  Analyze Now", key="do_analyze",
+                        if st.button("Analyze Now", key="do_analyze",
                                      type="primary", use_container_width=True):
                             st.session_state._analyzing = True
                             st.rerun()
@@ -1265,7 +1268,7 @@ def page_dashboard():
                 else:
                     st.markdown("""
                     <div class="empty-state">
-                        <div class="empty-icon">🖼️</div>
+                        <div class="empty-icon"></div>
                         <div class="empty-txt">
                             Upload an MRI scan above,<br>or use the
                             <strong>Guest Demo</strong> on the landing page.
@@ -1288,7 +1291,7 @@ def page_dashboard():
         st.markdown("""
         <div class="panel">
             <div class="panel-header">
-                <div class="panel-icon teal">🧠</div>
+                <div class="panel-icon teal"></div>
                 <div>
                     <div class="panel-title">Grad-CAM Analysis</div>
                     <div class="panel-sub">AI classification + heatmap</div>
@@ -1402,7 +1405,7 @@ def page_dashboard():
         else:
             st.markdown("""
             <div class="empty-state">
-                <div class="empty-icon">🧠</div>
+                <div class="empty-icon"></div>
                 <div class="empty-txt">
                     Upload a scan and click <strong>Analyze Now</strong>
                     to see the Grad-CAM heatmap and classification here.
@@ -1425,7 +1428,7 @@ def page_dashboard():
         st.markdown("""
         <div class="panel">
             <div class="panel-header">
-                <div class="panel-icon green">📋</div>
+                <div class="panel-icon green"></div>
                 <div>
                     <div class="panel-title">Diagnostic Report</div>
                     <div class="panel-sub">AI-generated clinical summary</div>
@@ -1464,7 +1467,7 @@ def page_dashboard():
         else:
             st.markdown("""
             <div class="empty-state">
-                <div class="empty-icon">📋</div>
+                <div class="empty-icon"></div>
                 <div class="empty-txt">
                     The clinical report will appear here<br>after analysis is complete.
                 </div>
