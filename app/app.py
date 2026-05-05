@@ -1577,6 +1577,8 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "s
 from inference import run_pipeline
 from llm_report import prepare_llm_input, generate_report, generate_pdf
 
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src")))
+
 
 # ── Load logo once at startup ──────────────────────────────────────────────────
 def get_logo_b64():
@@ -2990,10 +2992,19 @@ def page_dashboard():
         if has_report:
             pname = st.session_state.get("patient_name", "Patient")
             rtext = st.session_state.report_text
+            # Strip disclaimer block before displaying in UI
+            if "DISCLAIMER" in rtext:
+                rtext = rtext[:rtext.rfind("DISCLAIMER")].strip()
+            if "====" in rtext:
+                # Remove trailing separator line
+                lines = rtext.split("\n")
+                while lines and lines[-1].strip().startswith("="):
+                    lines.pop()
+                rtext = "\n".join(lines).strip()
             st.markdown(
-                f'<div class="report-scroll">{rtext.replace(chr(10), "<br>")}</div>',
-                unsafe_allow_html=True
-            )
+            f'<div class="report-scroll">{rtext.replace(chr(10), "<br>")}</div>',
+            unsafe_allow_html=True
+        )
             st.markdown("<div style='height:14px'></div>", unsafe_allow_html=True)
             st.download_button(
                 label="⬇  Download PDF Report",
