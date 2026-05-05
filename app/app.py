@@ -921,7 +921,7 @@ def page_landing():
                             st.session_state.demo_mode         = True
                             st.session_state.user_name         = "Guest"
                             st.session_state.patient_name      = "Demo Patient"
-                            st.session_state.patient_age       = 30
+                            st.session_state.patient_age       = "Unknown"
                             st.session_state.patient_gender    = "Unknown"
                             st.session_state._analyzing        = True
                             st.session_state.result            = None
