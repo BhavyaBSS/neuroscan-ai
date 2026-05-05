@@ -2361,14 +2361,18 @@ def send_email_with_pdf(recipient_email, patient_name, pdf_bytes):
         msg['From']    = sender_email
         msg['To']      = recipient_email
         msg['Subject'] = f"NeuroScan AI: Diagnostic Report for {patient_name}"
+        # REPLACE WITH:
         body = f"""Dear {patient_name},
 
-Your MRI analysis is complete. Please find your NeuroScan AI Diagnostic Report attached.
+Your MRI scan analysis from NeuroScan is complete.
+Please find your diagnostic report attached to this email.
 
-IMPORTANT: This report is AI-generated and must be reviewed by a qualified healthcare professional.
+This report has been prepared for review by your healthcare provider.
+Please consult your doctor before making any medical decisions.
 
 Best regards,
-The NeuroScan AI Team"""
+NeuroScan Imaging
+neuroscan.clinical@gmail.com"""
         msg.attach(MIMEText(body, 'plain'))
         fname = f"NeuroScan_Report_{patient_name.replace(' ', '_')}.pdf"
         part  = MIMEApplication(pdf_bytes, Name=fname)
