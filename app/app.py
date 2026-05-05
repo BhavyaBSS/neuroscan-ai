@@ -2525,7 +2525,7 @@ def page_landing():
         </div>
         <div class="ns-stat">
             <div class="ns-stat-val">Visual Explainability</div>
-            <div class="ns-stat-label">Grad-CAM Powered</div>
+            <div class="ns-stat-label">Score-CAM Powered</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
