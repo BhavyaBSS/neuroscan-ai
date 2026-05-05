@@ -279,21 +279,3 @@ def run_pipeline(image_path):
 # ============================================================
 # TEST RUN
 # ============================================================
-if __name__ == "__main__":
-    test_img = os.path.join(BASE_DIR, "..", "data/Testing/meningioma/Te-me_0010.jpg")
-
-    if os.path.exists(test_img):
-        result = run_pipeline(test_img)
-        print("\nPrediction:  ", result["prediction"])
-        print("Confidence:  ", result["confidence"])
-        print("Heatmap:     ", result["explanation_plot_path"])
-
-        print("\nXAI Summary:")
-        for k, v in result["xai_summary"].items():
-            print(f"  {k}: {v}")
-
-        print("\nTumor Size:")
-        for k, v in result["tumor_size"].items():
-            print(f"  {k}: {v}")
-    else:
-        print("Test image not found.")
