@@ -2597,7 +2597,7 @@ def page_auth():
         <div class="auth-left">
             <div class="auth-grid-bg"></div>
             <div class="auth-brain-icon" style="position:relative;z-index:1;">
-                <img src="{LOGO_SRC}" style="width:80px;height:80px;object-fit:contain;filter:drop-shadow(0 0 30px rgba(0,212,255,0.5));" />
+                <img src="{LOGO_SRC}" style="width:160px;height:160px;object-fit:contain;filter:drop-shadow(0 0 30px rgba(0,212,255,0.7));" />
             </div>
             <div class="auth-brand-name">Neuro<em>Scan</em> AI</div>
             <div class="auth-brand-desc">
