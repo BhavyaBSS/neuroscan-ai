@@ -107,7 +107,7 @@ def generate_report(data):
         that might mean for the patient. What part of the brain is affected?
         Mention which region the AI focused on during analysis and what that suggests.
 
-        **AI EXPLANATION (HOW THE AI DECIDED)**
+        **EXPLANATION (HOW TUMOR IS DECIDED)**
         In plain language, explain what the GradCAM++ heatmap showed. Mention the brain region the
         heatmap highlighted. Keep it simple and reassuring.
 
@@ -347,7 +347,7 @@ def generate_pdf(data, report_text, original_image_path, gradcam_image_path, lim
         region_scores = xai.get("region_scores", {})
         if region_scores:
             story.append(Spacer(1, 10))
-            story.append(Paragraph("Regional Activation Grid (3×3)", xai_label_style))
+            story.append(Paragraph("Brain Regional Activation Grid (3×3)", xai_label_style))
             story.append(Spacer(1, 4))
 
             grid_order = [
@@ -395,7 +395,7 @@ def generate_pdf(data, report_text, original_image_path, gradcam_image_path, lim
             story.append(region_table)
 
     # ── AI Report ────────────────────────────────────────────
-    story.append(Paragraph("AI-Generated Medical Report", section_heading))
+    story.append(Paragraph("Medical Report", section_heading))
     story.append(HRFlowable(width="100%", thickness=1,
                              color=colors.HexColor('#dddddd'), spaceAfter=8))
 
