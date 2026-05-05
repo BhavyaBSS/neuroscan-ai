@@ -30,15 +30,6 @@ def prepare_llm_input(result, patient_info=None):
     else:
         certainty = "high"
 
-    # # ── ADD THIS ──
-    # tumor_size = result.get("tumor_size", {})
-    # tumor_size_str = ""
-    # if tumor_size and tumor_size.get("size_category") not in ("None", None):
-    #     tumor_size_str = (
-    #         f"Tumor Size Category: {tumor_size.get('size_category', 'N/A')}, "
-    #         f"Estimated Diameter: {tumor_size.get('diameter_cm', 'N/A')} cm, "
-    #         f"Brain Coverage: {tumor_size.get('tumor_pct_of_brain', 'N/A')}%"
-    #     )
 
     data = {
         "diagnosis":         result["prediction"],
