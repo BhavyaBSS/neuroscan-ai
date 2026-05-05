@@ -1064,7 +1064,7 @@
 #                 <div class="auth-pill">HIPAA-READY</div>
 #                 <div class="auth-pill">ENCRYPTED</div>
 #                 <div class="auth-pill">&lt; 10s RESULTS</div>
-#                 <div class="auth-pill">GRAD-CAM XAI</div>
+#                 <div class="auth-pill">Score-CAM XAI</div>
 #             </div>
 #         </div>
 #         """, unsafe_allow_html=True)
@@ -1382,7 +1382,7 @@
 #             </div>
 #             <div style="display:flex;gap:8px;margin-bottom:6px">
 #                 <div style="flex:1;font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);text-align:center;letter-spacing:0.5px">ORIGINAL MRI</div>
-#                 <div style="flex:1;font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);text-align:center;letter-spacing:0.5px">GRAD-CAM HEATMAP</div>
+#                 <div style="flex:1;font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);text-align:center;letter-spacing:0.5px">Score-CAM H</div>
 #             </div>""", unsafe_allow_html=True)
 
 #             # ── 2. Images ──
@@ -2616,7 +2616,7 @@ def page_auth():
                 <div class="auth-pill">HIPAA-READY</div>
                 <div class="auth-pill">ENCRYPTED</div>
                 <div class="auth-pill">&lt; 10s RESULTS</div>
-                <div class="auth-pill">GRAD-CAM XAI</div>
+                <div class="auth-pill">Score-CAM XAI</div>
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -2933,7 +2933,7 @@ def page_dashboard():
             </div>
             <div style="display:flex;gap:8px;margin-bottom:6px">
                 <div style="flex:1;font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);text-align:center;letter-spacing:0.5px">ORIGINAL MRI</div>
-                <div style="flex:1;font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);text-align:center;letter-spacing:0.5px">GRAD-CAM HEATMAP</div>
+                <div style="flex:1;font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);text-align:center;letter-spacing:0.5px">Score-CAM HEATMAP</div>
             </div>""", unsafe_allow_html=True)
 
             ic1, ic2 = st.columns(2)

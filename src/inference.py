@@ -239,14 +239,14 @@ def run_pipeline(image_path):
     }
 
     # =========================
-    # GRAD-CAM++ (ResNet)
+    # Score-CAM  (ResNet)
     # =========================
     target_layer = get_target_layer(resnet_model)
     scorecam     = ScoreCAM(resnet_model, target_layer)
     cam          = scorecam.generate(input_tensor, pred_idx)
 
     # =========================
-    # GRAD-CAM++ HEATMAP
+    # Score-CAM  HEATMAP
     # =========================
     img_bgr = cv2.imread(image_path)
     img_bgr = cv2.resize(img_bgr, (224, 224))
