@@ -962,30 +962,25 @@ def page_landing():
     # ── Feature Cards ──────────────────────────────────────────────────────────
     st.markdown("""
     <div class="ns-features">
-        <div class="ns-section-kicker"></div>
         <div class="ns-section-title">Why NeuroScan AI?</div>
         <div class="ns-feature-grid">
             <div class="ns-feature-card">
-                <div class="ns-feature-num"></div>
                 # <span class="ns-feature-icon"></span>
                 <div class="ns-feature-kpi">98.65%</div>
                 <div class="ns-feature-name">EfficientNetB0 Classification</div>
                 <div class="ns-feature-desc">Deep residual network trained on curated MRI datasets delivering class-leading accuracy across all tumor types.</div>
             </div>
             <div class="ns-feature-card">
-                <div class="ns-feature-num"></div>
                 # <span class="ns-feature-icon"></span>
                 <div class="ns-feature-name">Grad-CAM Heatmaps</div>
                 <div class="ns-feature-desc">Visual saliency maps highlight the exact pixel regions driving each AI decision. Zero black box — full transparency.</div>
             </div>
             <div class="ns-feature-card">
-                <div class="ns-feature-num"></div>
                 # <span class="ns-feature-icon"></span>
                 <div class="ns-feature-name">Confidence Scoring</div>
                 <div class="ns-feature-desc">Per-class softmax confidence scores so you always know the model's certainty and when to seek a second opinion.</div>
             </div>
             <div class="ns-feature-card">
-                <div class="ns-feature-num"></div>
                 # <span class="ns-feature-icon"></span>
                 <div class="ns-feature-name">LLM Clinical Reports</div>
                 <div class="ns-feature-desc">AI-generated radiologist-grade summaries distill findings into clear, actionable narrative — PDF-ready in seconds.</div>
