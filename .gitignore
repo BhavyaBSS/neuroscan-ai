@@ -1,2 +1,4 @@
 .streamlit/secrets.toml.DS_Store
 outputs/
+.DS_Store
+outputs/
