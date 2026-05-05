@@ -30,15 +30,15 @@ def prepare_llm_input(result, patient_info=None):
     else:
         certainty = "high"
 
-    # ── ADD THIS ──
-    tumor_size = result.get("tumor_size", {})
-    tumor_size_str = ""
-    if tumor_size and tumor_size.get("size_category") not in ("None", None):
-        tumor_size_str = (
-            f"Tumor Size Category: {tumor_size.get('size_category', 'N/A')}, "
-            f"Estimated Diameter: {tumor_size.get('diameter_cm', 'N/A')} cm, "
-            f"Brain Coverage: {tumor_size.get('tumor_pct_of_brain', 'N/A')}%"
-        )
+    # # ── ADD THIS ──
+    # tumor_size = result.get("tumor_size", {})
+    # tumor_size_str = ""
+    # if tumor_size and tumor_size.get("size_category") not in ("None", None):
+    #     tumor_size_str = (
+    #         f"Tumor Size Category: {tumor_size.get('size_category', 'N/A')}, "
+    #         f"Estimated Diameter: {tumor_size.get('diameter_cm', 'N/A')} cm, "
+    #         f"Brain Coverage: {tumor_size.get('tumor_pct_of_brain', 'N/A')}%"
+    #     )
 
     data = {
         "diagnosis":         result["prediction"],
@@ -49,8 +49,8 @@ def prepare_llm_input(result, patient_info=None):
         "observation":       result.get("observation", "Highlighted regions indicate abnormal patterns"),
         "xai_summary":            result.get("xai_summary", {}),
         "confidence_breakdown":   result.get("confidence_breakdown", {}),
-        "tumor_size":        result.get("tumor_size", {}),
-        "tumor_size_str":    tumor_size_str,
+        # "tumor_size":        result.get("tumor_size", {}),
+        # "tumor_size_str":    tumor_size_str,
     }
 
     if patient_info:
@@ -102,7 +102,7 @@ def generate_report(data):
         AI Model Used: {data['prediction_model']}
         What the scan shows: {data['observation']}
 
-        Tumor Size Information: {data.get('tumor_size_str', 'Not available')}
+        # Tumor Size Information: {data.get('tumor_size_str', 'Not available')}
 
         {xai_context}
 
@@ -148,7 +148,7 @@ def generate_pdf(data, report_text, original_image_path, gradcam_image_path, lim
     """Generate a professional PDF report and return it as bytes."""
     
     # DEBUG - remove after fix
-    print("DEBUG tumor_size in generate_pdf:", data.get("tumor_size"))
+    # print("DEBUG tumor_size in generate_pdf:", data.get("tumor_size"))
     
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(
@@ -318,35 +318,35 @@ def generate_pdf(data, report_text, original_image_path, gradcam_image_path, lim
     ]))
     story.append(img_table)
 
-    # ── TUMOR SIZE SECTION ───────────────────────────────────
-    tumor = data.get("tumor_size", {})
-    if tumor and tumor.get("size_category") not in ("None", None, ""):
-        story.append(Paragraph("Tumor Size Estimation", section_heading))
-        story.append(HRFlowable(width="100%", thickness=1,
-                                color=colors.HexColor('#dddddd'), spaceAfter=6))
-        tumor_rows = [
-            [Paragraph("Size Category", xai_label_style),
-             Paragraph(str(tumor.get("size_category", "N/A")), value_style)],
-            [Paragraph("Estimated Diameter", xai_label_style),
-             Paragraph(f"{tumor.get('diameter_cm', 'N/A')} cm", value_style)],
-            [Paragraph("Brain Area Coverage", xai_label_style),
-             Paragraph(f"{tumor.get('tumor_pct_of_brain', 'N/A')}%", value_style)],
-            [Paragraph("Note", xai_label_style),
-             Paragraph("Pixel-based estimate. Not a clinical measurement.",
-                       xai_value_style)],
-        ]
-        tumor_table = Table(tumor_rows, colWidths=[2.4*inch, 4.2*inch])
-        tumor_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#f8fafc')),
-            ('BOX',       (0, 0), (-1, -1), 0.5, colors.HexColor('#cccccc')),
-            ('INNERGRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#e0e0e0')),
-            ('TOPPADDING',    (0, 0), (-1, -1), 7),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 7),
-            ('LEFTPADDING',   (0, 0), (-1, -1), 10),
-            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-        ]))
-        story.append(tumor_table)
-        story.append(Spacer(1, 10))
+    # # ── TUMOR SIZE SECTION ───────────────────────────────────
+    # tumor = data.get("tumor_size", {})
+    # if tumor and tumor.get("size_category") not in ("None", None, ""):
+    #     story.append(Paragraph("Tumor Size Estimation", section_heading))
+    #     story.append(HRFlowable(width="100%", thickness=1,
+    #                             color=colors.HexColor('#dddddd'), spaceAfter=6))
+    #     tumor_rows = [
+    #         [Paragraph("Size Category", xai_label_style),
+    #          Paragraph(str(tumor.get("size_category", "N/A")), value_style)],
+    #         [Paragraph("Estimated Diameter", xai_label_style),
+    #          Paragraph(f"{tumor.get('diameter_cm', 'N/A')} cm", value_style)],
+    #         [Paragraph("Brain Area Coverage", xai_label_style),
+    #          Paragraph(f"{tumor.get('tumor_pct_of_brain', 'N/A')}%", value_style)],
+    #         [Paragraph("Note", xai_label_style),
+    #          Paragraph("Pixel-based estimate. Not a clinical measurement.",
+    #                    xai_value_style)],
+    #     ]
+    #     tumor_table = Table(tumor_rows, colWidths=[2.4*inch, 4.2*inch])
+    #     tumor_table.setStyle(TableStyle([
+    #         ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#f8fafc')),
+    #         ('BOX',       (0, 0), (-1, -1), 0.5, colors.HexColor('#cccccc')),
+    #         ('INNERGRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#e0e0e0')),
+    #         ('TOPPADDING',    (0, 0), (-1, -1), 7),
+    #         ('BOTTOMPADDING', (0, 0), (-1, -1), 7),
+    #         ('LEFTPADDING',   (0, 0), (-1, -1), 10),
+    #         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+    #     ]))
+    #     story.append(tumor_table)
+    #     story.append(Spacer(1, 10))
 
     # ── XAI SECTION ──────────────────────────────────────────
     xai = data.get("xai_summary", {})

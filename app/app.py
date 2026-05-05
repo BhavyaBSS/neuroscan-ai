@@ -1319,7 +1319,7 @@ def page_dashboard():
             }
             data        = prepare_llm_input(result, pinfo)
             report_text = generate_report(data)
-            data["tumor_size"] = result.get("tumor_size", {})
+            # data["tumor_size"] = result.get("tumor_size", {})
             pdf_bytes   = generate_pdf(
                 data=data,
                 report_text=report_text,
@@ -1376,45 +1376,45 @@ def page_dashboard():
             with ic2:
                 st.image(result["explanation_plot_path"], use_container_width=True)
 
-            # ── 3. Tumor size ──
-            tumor = result.get("tumor_size", {})
-            tumor = result.get("tumor_size") or {}
-            if tumor and isinstance(tumor, dict) and tumor.get("tumor_pixels", 0) > 0:
-                sz   = tumor.get("size_category", "—")
-                diam = tumor.get("diameter_cm", "—")
-                pct  = tumor.get("tumor_pct_of_brain", "—")
-                st.markdown(f"""
-                <div style='margin-top:12px;padding:14px;background:#131923;
-                border:1px solid rgba(255,255,255,0.07);border-radius:10px;'>
-                    <div style='font-family:DM Mono,monospace;font-size:10px;
-                    color:#64748b;letter-spacing:1px;margin-bottom:10px;'>
-                    TUMOR SIZE ESTIMATE</div>
-                    <div style='display:flex;gap:8px;'>
-                        <div style='flex:1;text-align:center;padding:8px;
-                        background:#0d1117;border-radius:8px;'>
-                            <div style='font-size:18px;font-weight:900;
-                            color:#00d4ff;'>{sz}</div>
-                            <div style='font-size:10px;color:#64748b;
-                            margin-top:2px;'>CATEGORY</div>
-                        </div>
-                        <div style='flex:1;text-align:center;padding:8px;
-                        background:#0d1117;border-radius:8px;'>
-                            <div style='font-size:18px;font-weight:900;
-                            color:#00d4ff;'>{diam} cm</div>
-                            <div style='font-size:10px;color:#64748b;
-                            margin-top:2px;'>DIAMETER</div>
-                        </div>
-                        <div style='flex:1;text-align:center;padding:8px;
-                        background:#0d1117;border-radius:8px;'>
-                            <div style='font-size:18px;font-weight:900;
-                            color:#00d4ff;'>{pct}%</div>
-                            <div style='font-size:10px;color:#64748b;
-                            margin-top:2px;'>OF BRAIN</div>
-                        </div>
-                    </div>
-                    <div style='font-size:10px;color:#64748b;margin-top:8px;
-                    font-style:italic;'>⚠ Pixel-based estimate. Not clinical.</div>
-                </div>""", unsafe_allow_html=True)
+            # # ── 3. Tumor size ──
+            # tumor = result.get("tumor_size", {})
+            # tumor = result.get("tumor_size") or {}
+            # if tumor and isinstance(tumor, dict) and tumor.get("tumor_pixels", 0) > 0:
+            #     sz   = tumor.get("size_category", "—")
+            #     diam = tumor.get("diameter_cm", "—")
+            #     pct  = tumor.get("tumor_pct_of_brain", "—")
+            #     st.markdown(f"""
+            #     <div style='margin-top:12px;padding:14px;background:#131923;
+            #     border:1px solid rgba(255,255,255,0.07);border-radius:10px;'>
+            #         <div style='font-family:DM Mono,monospace;font-size:10px;
+            #         color:#64748b;letter-spacing:1px;margin-bottom:10px;'>
+            #         TUMOR SIZE ESTIMATE</div>
+            #         <div style='display:flex;gap:8px;'>
+            #             <div style='flex:1;text-align:center;padding:8px;
+            #             background:#0d1117;border-radius:8px;'>
+            #                 <div style='font-size:18px;font-weight:900;
+            #                 color:#00d4ff;'>{sz}</div>
+            #                 <div style='font-size:10px;color:#64748b;
+            #                 margin-top:2px;'>CATEGORY</div>
+            #             </div>
+            #             <div style='flex:1;text-align:center;padding:8px;
+            #             background:#0d1117;border-radius:8px;'>
+            #                 <div style='font-size:18px;font-weight:900;
+            #                 color:#00d4ff;'>{diam} cm</div>
+            #                 <div style='font-size:10px;color:#64748b;
+            #                 margin-top:2px;'>DIAMETER</div>
+            #             </div>
+            #             <div style='flex:1;text-align:center;padding:8px;
+            #             background:#0d1117;border-radius:8px;'>
+            #                 <div style='font-size:18px;font-weight:900;
+            #                 color:#00d4ff;'>{pct}%</div>
+            #                 <div style='font-size:10px;color:#64748b;
+            #                 margin-top:2px;'>OF BRAIN</div>
+            #             </div>
+            #         </div>
+            #         <div style='font-size:10px;color:#64748b;margin-top:8px;
+            #         font-style:italic;'>⚠ Pixel-based estimate. Not clinical.</div>
+            #     </div>""", unsafe_allow_html=True)
 
             # ── 4. Confidence bars ──
             breakdown = result.get("confidence_breakdown", {})
