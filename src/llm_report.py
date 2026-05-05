@@ -549,11 +549,11 @@ def generate_pdf(
 
     # ── MRI Scan & Heatmap Images ─────────────────────────────
     story.append(Spacer(1, 10))
-    story.append(Paragraph("MRI Scan & Grad-CAM++ Analysis", S["section_heading"]))
+    story.append(Paragraph("MRI Scan & Score-CAM++ Analysis", S["section_heading"]))
 
     image_candidates = [
         ("Original MRI Scan",        original_image_path),
-        ("Grad-CAM++ Heatmap",        gradcam_image_path),
+        ("Score-CAM++ Heatmap",        gradcam_image_path),
     ]
     if lime_image_path:
         image_candidates.append(("Supplementary Overlay", lime_image_path))

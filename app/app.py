@@ -857,7 +857,7 @@
 #     #         </h1>
 #     #         <p class="ns-hero-sub">
 #     #             Upload an MRI scan and receive AI-powered classification,
-#     #             Grad-CAM heatmaps, and a full clinical report in under 10 seconds.
+#     #             Score-CAM heatmaps, and a full clinical report in under 10 seconds.
 #     #         </p>
 #     #     </div>
 #     #     """, unsafe_allow_html=True)
@@ -876,7 +876,7 @@
 #             </h1>
 #             <p class="ns-hero-sub" style="margin: 20px auto; max-width: 600px;">
 #                 Upload an MRI scan and receive AI-powered classification,
-#                 Grad-CAM heatmaps, and a full clinical report in under 10 seconds.
+#                 Score-CAM heatmaps, and a full clinical report in under 10 seconds.
 #             </p>
 #         </div>
 #         """, unsafe_allow_html=True)
@@ -971,7 +971,7 @@
 #             <div class="ns-stat-label">Deep Learning Model</div>
 #         </div>
 #         <div class="ns-stat">
-#             <div class="ns-stat-val">Grad-CAM</div>
+#             <div class="ns-stat-val">Score-CAM</div>
 #             <div class="ns-stat-label">Visual Explainability</div>
 #         </div>
 #     </div>
@@ -988,7 +988,7 @@
 #                 <div class="ns-feature-desc">Deep residual network trained on curated MRI datasets delivering class-leading accuracy across all tumor types.</div>
 #             </div>
 #             <div class="ns-feature-card">
-#                 <div class="ns-feature-name">Grad-CAM Heatmaps</div>
+#                 <div class="ns-feature-name">Score-CAM Heatmaps</div>
 #                 <div class="ns-feature-desc">Visual saliency maps highlight the exact pixel regions driving each AI decision. Zero black box — full transparency.</div>
 #             </div>
 #             <div class="ns-feature-card">
@@ -1008,7 +1008,7 @@
 #     <div class="ns-cta-band">
 #         <div class="ns-cta-title">Ready to Analyze Your First Scan?</div>
 #         <div class="ns-cta-sub">
-#             Upload an MRI, get AI classification, a Grad-CAM heatmap,<br>
+#             Upload an MRI, get AI classification, a Score-CAM heatmap,<br>
 #             and a full clinical report in under 10 seconds.
 #         </div>
 #     </div>
@@ -1057,7 +1057,7 @@
 #             <div class="auth-brand-name">Neuro<em>Scan</em> AI</div>
 #             <div class="auth-brand-desc">
 #                 Explainable AI brain tumor detection —
-#                 98.65% accuracy, Grad-CAM visualization,
+#                 98.65% accuracy, Score-CAM visualization,
 #                 and automated LLM clinical reporting.
 #             </div>
 #             <div class="auth-pills">
@@ -1299,14 +1299,14 @@
 #             <div class="flow-dot {live_cls}"></div>
 #         </div>""", unsafe_allow_html=True)
 
-#     # ── BOX 2 — Grad-CAM Analysis ─────────────────────────────────────────────
+#     # ── BOX 2 — Score-CAM Analysis ─────────────────────────────────────────────
 #     with col2:
 #         st.markdown("""
 #         <div class="panel">
 #             <div class="panel-header">
 #                 <div class="panel-icon teal"></div>
 #                 <div>
-#                     <div class="panel-title">Grad-CAM Analysis</div>
+#                     <div class="panel-title">Score-CAM Analysis</div>
 #                     <div class="panel-sub">AI classification + heatmap</div>
 #                 </div>
 #             </div>
@@ -1317,7 +1317,7 @@
 #             status = st.empty()
 #             steps  = [
 #                 ("Running EfficientNetB0 classification…", 25),
-#                 ("Computing Grad-CAM saliency map…",       55),
+#                 ("Computing Score-CAM saliency map…",       55),
 #                 ("Generating LLM clinical report…",        85),
 #             ]
 #             for msg, val in steps:
@@ -1372,7 +1372,7 @@
 #                     <div class="conf-chip-val">{conf:.1f}%</div>
 #                 </div>
 #                 <div class="conf-chip">
-#                     <div class="conf-chip-label">Grad-CAM Score</div>
+#                     <div class="conf-chip-label">Score-CAM Score</div>
 #                     <div class="conf-chip-val">{result.get('gradcam_accuracy', 0.92):.2f}</div>
 #                 </div>
 #             </div>
@@ -1421,7 +1421,7 @@
 #                 <div class="empty-icon"></div>
 #                 <div class="empty-txt">
 #                     Upload a scan and click <strong>Analyze Now</strong>
-#                     to see the Grad-CAM heatmap and classification here.
+#                     to see the Score-CAM heatmap and classification here.
 #                 </div>
 #             </div>""", unsafe_allow_html=True)
 
@@ -1495,7 +1495,7 @@
 #                 NeuroScan AI is an explainable deep-learning platform built for
 #                 brain tumor detection from MRI scans.<br><br>
 #                 Powered by an <strong style="color:#e2e8f0">EfficientNetB0 backbone</strong>
-#                 and <strong style="color:#e2e8f0">Grad-CAM visualization</strong>, every
+#                 and <strong style="color:#e2e8f0">Score-CAM visualization</strong>, every
 #                 prediction is transparent and traceable. The system generates
 #                 LLM-assisted clinical summaries — giving radiologists and physicians
 #                 actionable insights within seconds of upload.<br><br>
@@ -1513,7 +1513,7 @@
 #                 <div class="about-stat-lbl">Deep Learning Model</div>
 #             </div>
 #             <div class="about-stat-card">
-#                 <div class="about-stat-val">Grad-CAM</div>
+#                 <div class="about-stat-val">Score-CAM</div>
 #                 <div class="about-stat-lbl">Explainability Method</div>
 #             </div>
 #             <div class="about-stat-card">
@@ -2435,7 +2435,7 @@ def page_landing():
             </h1>
             <p class="ns-hero-sub" style="margin: 20px auto; max-width: 600px;">
                 Upload an MRI scan and receive AI-powered classification,
-                Grad-CAM heatmaps, and a full clinical report in under 10 seconds.
+                Score-CAM heatmaps, and a full clinical report in under 10 seconds.
             </p>
         </div>
         """, unsafe_allow_html=True)
@@ -2561,7 +2561,7 @@ def page_landing():
     <div class="ns-cta-band">
         <div class="ns-cta-title">Ready to Analyze Your First Scan?</div>
         <div class="ns-cta-sub">
-            Upload an MRI, get AI classification, a Grad-CAM heatmap,<br>
+            Upload an MRI, get AI classification, a Score-CAM heatmap,<br>
             and a full clinical report in under 10 seconds.
         </div>
     </div>
@@ -2609,7 +2609,7 @@ def page_auth():
             <div class="auth-brand-name">Neuro<em>Scan</em> AI</div>
             <div class="auth-brand-desc">
                 Explainable AI brain tumor detection —
-                98.65% accuracy, Grad-CAM visualization,
+                98.65% accuracy, Score-CAM visualization,
                 and automated LLM clinical reporting.
             </div>
             <div class="auth-pills">
@@ -2852,14 +2852,14 @@ def page_dashboard():
             <div class="flow-dot {live_cls}"></div>
         </div>""", unsafe_allow_html=True)
 
-    # ── BOX 2 — Grad-CAM Analysis ─────────────────────────────────────────────
+    # ── BOX 2 — Score-CAM Analysis ─────────────────────────────────────────────
     with col2:
         st.markdown("""
         <div class="panel">
             <div class="panel-header">
                 <div class="panel-icon teal"></div>
                 <div>
-                    <div class="panel-title">Grad-CAM Analysis</div>
+                    <div class="panel-title">Score-CAM Analysis</div>
                     <div class="panel-sub">AI classification + heatmap</div>
                 </div>
             </div>
@@ -2870,7 +2870,7 @@ def page_dashboard():
             status = st.empty()
             steps  = [
                 ("Running EfficientNetB0 classification…", 25),
-                ("Computing Grad-CAM saliency map…",       55),
+                ("Computing Score-CAM saliency map…",       55),
                 ("Generating LLM clinical report…",        85),
             ]
             for msg, val in steps:
@@ -2923,7 +2923,7 @@ def page_dashboard():
                     <div class="conf-chip-val">{conf:.1f}%</div>
                 </div>
                 <div class="conf-chip">
-                    <div class="conf-chip-label">Grad-CAM Score</div>
+                    <div class="conf-chip-label">Score-CAM Score</div>
                     <div class="conf-chip-val">{result.get('gradcam_accuracy', 0.92):.2f}</div>
                 </div>
             </div>
@@ -2970,7 +2970,7 @@ def page_dashboard():
                 <div class="empty-icon"></div>
                 <div class="empty-txt">
                     Upload a scan and click <strong>Analyze Now</strong>
-                    to see the Grad-CAM heatmap and classification here.
+                    to see the Score-CAM heatmap and classification here.
                 </div>
             </div>""", unsafe_allow_html=True)
 
@@ -3060,7 +3060,7 @@ def page_dashboard():
                 NeuroScan AI is an explainable deep-learning platform built for
                 brain tumor detection from MRI scans.<br><br>
                 Powered by an <strong style="color:#e2e8f0">EfficientNetB0 backbone</strong>
-                and <strong style="color:#e2e8f0">Grad-CAM visualization</strong>, every
+                and <strong style="color:#e2e8f0">Score-CAM visualization</strong>, every
                 prediction is transparent and traceable. The system generates
                 LLM-assisted clinical summaries — giving radiologists and physicians
                 actionable insights within seconds of upload.<br><br>
@@ -3078,7 +3078,7 @@ def page_dashboard():
                 <div class="about-stat-lbl">Deep Learning Model</div>
             </div>
             <div class="about-stat-card">
-                <div class="about-stat-val">Grad-CAM</div>
+                <div class="about-stat-val">Score-CAM</div>
                 <div class="about-stat-lbl">Explainability Method</div>
             </div>
             <div class="about-stat-card">
