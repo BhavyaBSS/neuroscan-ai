@@ -549,11 +549,11 @@ def generate_pdf(
 
     # ── MRI Scan & Heatmap Images ─────────────────────────────
     story.append(Spacer(1, 10))
-    story.append(Paragraph("MRI Scan & Score-CAM++ Analysis", S["section_heading"]))
+    story.append(Paragraph("MRI Scan & GRAD-CAM++ Analysis", S["section_heading"]))
 
     image_candidates = [
         ("Original MRI Scan",        original_image_path),
-        ("Score-CAM++ Heatmap",        gradcam_image_path),
+        ("GRAD-CAM++ Heatmap",        gradcam_image_path),
     ]
     if lime_image_path:
         image_candidates.append(("Supplementary Overlay", lime_image_path))
@@ -587,7 +587,7 @@ def generate_pdf(
         story.append(Paragraph("Heatmap Explanation Summary", S["section_heading"]))
         xai_rows = [
             [Paragraph("Visualisation Method",      S["label"]),
-             Paragraph(_safe_text(xai.get("method_used"), "Score-CAM"), S["body"])],
+             Paragraph(_safe_text(xai.get("method_used"), "GRAD-CAM++"), S["body"])],
             [Paragraph("Dominant Active Region",    S["label"]),
              Paragraph(_safe_text(xai.get("dominant_region")),           S["body"])],
             [Paragraph("Top 3 Active Regions",      S["label"]),
