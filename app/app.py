@@ -3078,7 +3078,7 @@ def page_dashboard():
                 <div class="about-stat-lbl">Deep Learning Model</div>
             </div>
             <div class="about-stat-card">
-                <div class="about-stat-val">Score-CAM</div>
+                <div class="about-stat-val">GRAD-CAM++</div>
                 <div class="about-stat-lbl">Explainability Method</div>
             </div>
             <div class="about-stat-card">
