@@ -111,7 +111,7 @@ class ScoreCAM:
 
         # Step 3: for each activation map, mask input and get score
         scores = []
-        for i in range(n_channels):
+        for i in top_k_idx:
             # Upsample single activation map to input size
             act_map = activations[i].unsqueeze(0).unsqueeze(0)  # (1,1,H,W)
             act_map = torch.nn.functional.interpolate(
@@ -141,7 +141,7 @@ class ScoreCAM:
         weights = torch.relu(scores)  # only positive contributions
 
         cam = torch.zeros(activations.shape[1:], dtype=torch.float32).to(device)
-        for i, w in enumerate(weights):
+        for idx, (i, w) in enumerate(zip(top_k_idx, weights)):
             cam += w * activations[i]
 
         cam = torch.relu(cam)
@@ -263,7 +263,7 @@ def run_pipeline(image_path):
     # XAI SUMMARY
     # =========================
     xai_summary = {
-        "method_used":        "Score-CAM",
+        "method_used":        "GRAD-CAM++",
         "dominant_region":    region_info["dominant_region"],
         "top3_regions":       region_info["top3_regions"],
         "cam_coverage_pct":   round(region_info["coverage_pct"], 1),
@@ -280,9 +280,9 @@ def run_pipeline(image_path):
         "confidence":           conf,
         "confidence_breakdown": confidence_breakdown,
         "prediction_model":     "EfficientNet-B0",
-        "explanation_model": "ResNet50 (Score-CAM)",
+        "explanation_model": "ResNet50 (GRAD-CAM++)",
         "observation": (
-            f"Score-CAM highlights the {region_info['dominant_region']} region "
+            f"GRAD-CAM++ highlights the {region_info['dominant_region']} region "
             f"with {region_info['coverage_pct']:.1f}% high-activation coverage."
         ),
         "explanation_plot_path": explanation_plot_path,
