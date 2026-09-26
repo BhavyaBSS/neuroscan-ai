@@ -1562,6 +1562,7 @@
 #     st.rerun()
 
 import streamlit as st
+import streamlit.components.v1 as components
 import sys
 import os
 import time
@@ -1590,6 +1591,384 @@ def get_logo_b64():
 
 LOGO_B64 = get_logo_b64()
 LOGO_SRC = f"data:image/png;base64,{LOGO_B64}" if LOGO_B64 else ""
+
+
+# ── Load the anatomical brain model once at startup ─────────────────────────────
+def get_brain_model_b64():
+    model_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets", "brain_model.glb")
+    if os.path.exists(model_path):
+        with open(model_path, "rb") as f:
+            return base64.b64encode(f.read()).decode()
+    return ""
+
+BRAIN_MODEL_B64 = get_brain_model_b64()
+
+
+# ── Interactive brain explorer: hover-highlighted regions, click-to-zoom, live info panel ──
+def render_brain_explorer(height=520):
+    canvas_h = height - 20
+    html = f"""
+    <div id="explorerRoot" style="width:100%;height:{height}px;background:#05070c;position:relative;box-sizing:border-box;display:flex;align-items:center;justify-content:center;">
+      <div id="explorerRow" style="display:flex;gap:18px;height:{canvas_h}px;width:100%;position:relative;">
+        <button id="closeBtn" style="display:none;position:absolute;top:-44px;right:0;z-index:100;
+             width:32px;height:32px;border-radius:50%;border:1px solid rgba(255,255,255,0.15);
+             background:rgba(13,17,23,0.9);color:#94a3b8;font-size:16px;cursor:pointer;line-height:1;">✕</button>
+        <div style="flex:0 0 56%;position:relative;border:1px solid rgba(255,255,255,0.07);
+                    border-radius:12px;overflow:hidden;background:radial-gradient(circle at 50% 40%,rgba(0,40,55,0.22),rgba(4,6,10,0.5));">
+          <canvas id="brainCanvas" style="width:100%;height:100%;display:block;cursor:pointer;"></canvas>
+          <div id="brainLoading" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+               color:#4a5568;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;text-align:center;padding:20px;">
+            LOADING BRAIN MODEL…
+          </div>
+          <div id="brainTag" style="position:absolute;pointer-events:none;display:none;
+               background:rgba(8,12,20,0.92);border:1px solid rgba(0,212,255,0.35);border-radius:5px;
+               padding:5px 10px;font-family:'DM Mono',monospace;font-size:11px;color:#fff;z-index:40;"></div>
+          <div style="position:absolute;bottom:10px;left:0;right:0;text-align:center;font-family:'DM Mono',monospace;
+               font-size:10px;letter-spacing:1px;color:#4a5568;">HOVER TO EXPLORE &nbsp;·&nbsp; CLICK TO ZOOM IN</div>
+        </div>
+        <div id="infoPanel" style="flex:1;border:1px solid rgba(255,255,255,0.07);border-radius:12px;
+             background:#0d1117;padding:22px;overflow-y:auto;font-family:'DM Sans',sans-serif;color:#e2e8f0;
+             display:flex;flex-direction:column;justify-content:center;"></div>
+      </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script>
+    (function() {{
+        const canvas = document.getElementById('brainCanvas');
+        const tag    = document.getElementById('brainTag');
+        const panel  = document.getElementById('infoPanel');
+        const H = {canvas_h};
+        let W = canvas.clientWidth || 400;
+
+        const scene    = new THREE.Scene();
+        const camera   = new THREE.PerspectiveCamera(42, W / H, 0.1, 100);
+        camera.position.set(0, 0, 7.0);
+        const renderer = new THREE.WebGLRenderer({{ canvas: canvas, alpha: true, antialias: true }});
+        renderer.setSize(W, H);
+        renderer.setPixelRatio(window.devicePixelRatio || 1);
+
+        // ── Load the real anatomical brain model (.glb), Fresnel hologram shader ──
+        const brain = new THREE.Group();
+        scene.add(brain);
+        let halfExtents = new THREE.Vector3(2, 1.64, 2.3);
+        let modelReady = false;
+
+        const hologramMaterial = new THREE.ShaderMaterial({{
+            uniforms: {{
+                baseColor: {{ value: new THREE.Color(0x0a6cff) }},
+                rimColor:  {{ value: new THREE.Color(0x9fe8ff) }},
+                opacity:   {{ value: 1.0 }}
+            }},
+            vertexShader: `
+                varying vec3 vNormal;
+                varying vec3 vViewDir;
+                void main() {{
+                    vNormal = normalize(normalMatrix * normal);
+                    vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+                    vViewDir = normalize(-mvPosition.xyz);
+                    gl_Position = projectionMatrix * mvPosition;
+                }}
+            `,
+            fragmentShader: `
+                uniform vec3 baseColor;
+                uniform vec3 rimColor;
+                uniform float opacity;
+                varying vec3 vNormal;
+                varying vec3 vViewDir;
+                void main() {{
+                    vec3 N = normalize(vNormal);
+                    vec3 V = normalize(vViewDir);
+                    vec3 L = normalize(vec3(0.35, 0.65, 0.9));
+                    float diff = max(dot(N, L), 0.0);
+                    float fresnel = pow(1.0 - max(dot(N, V), 0.0), 2.6);
+                    vec3 finalColor = baseColor * (0.05 + diff * 0.55) + rimColor * fresnel * 0.85;
+                    float alpha = opacity * clamp(0.55 + diff * 0.25 + fresnel * 0.45, 0.0, 1.0);
+                    gl_FragColor = vec4(finalColor, alpha);
+                }}
+            `,
+            transparent: true, blending: THREE.NormalBlending, depthWrite: true, side: THREE.FrontSide
+        }});
+
+
+        function b64ToArrayBuffer(b64) {{
+            const binary = atob(b64);
+            const bytes = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+            return bytes.buffer;
+        }}
+
+        const loadingEl = document.getElementById('brainLoading');
+        const MODEL_B64 = "{BRAIN_MODEL_B64}";
+        if (MODEL_B64) {{
+            const loader = new THREE.GLTFLoader();
+            loader.parse(b64ToArrayBuffer(MODEL_B64), '', function(gltf) {{
+                const model = gltf.scene;
+                const box = new THREE.Box3().setFromObject(model);
+                const size = new THREE.Vector3(); box.getSize(size);
+                const center = new THREE.Vector3(); box.getCenter(center);
+                const maxDim = Math.max(size.x, size.y, size.z) || 1;
+                const scale = 4.2 / maxDim;
+                model.position.copy(center).multiplyScalar(-scale);
+                model.scale.setScalar(scale);
+                halfExtents.set((size.x*scale)/2, (size.y*scale)/2, (size.z*scale)/2);
+                const meshList = [];
+                model.traverse(function(child) {{ if (child.isMesh) meshList.push(child); }});
+                meshList.forEach(function(child) {{
+                    child.material = hologramMaterial;
+                    const wire = new THREE.Mesh(
+                        child.geometry,
+                        new THREE.MeshBasicMaterial({{ color: 0x9fe8ff, wireframe: true, transparent: true, opacity: 0.10, depthWrite: false }})
+                    );
+                    child.add(wire);
+                }});
+                brain.add(model);
+                modelReady = true;
+                if (loadingEl) loadingEl.style.display = 'none';
+            }}, function(err) {{
+                console.error('Brain model failed to load', err);
+                if (loadingEl) loadingEl.textContent = 'Could not load brain_model.glb — check the file.';
+            }});
+        }} else if (loadingEl) {{
+            loadingEl.textContent = 'brain_model.glb not found in app/assets/';
+        }}
+
+        scene.add(new THREE.AmbientLight(0x3a4a5a, 1.0));
+        const key = new THREE.PointLight(0x00d4ff, 1.5, 20); key.position.set(4,3,5); scene.add(key);
+        const rim = new THREE.PointLight(0x0077ff, 0.8, 20); rim.position.set(-4,-2,-5); scene.add(rim);
+
+        // ── Soft glow sprite that snaps to whichever region is hovered/selected ──
+        function buildGlowTexture() {{
+            const s = 128;
+            const c = document.createElement('canvas'); c.width = s; c.height = s;
+            const ctx = c.getContext('2d');
+            const g = ctx.createRadialGradient(s/2, s/2, 0, s/2, s/2, s/2);
+            g.addColorStop(0, 'rgba(255,255,255,0.95)');
+            g.addColorStop(0.35, 'rgba(255,255,255,0.55)');
+            g.addColorStop(1, 'rgba(255,255,255,0)');
+            ctx.fillStyle = g;
+            ctx.fillRect(0, 0, s, s);
+            return new THREE.CanvasTexture(c);
+        }}
+        const glowTex = buildGlowTexture();
+        const patchMat = new THREE.SpriteMaterial({{
+            map: glowTex, color: 0x00d4ff, transparent: true, opacity: 0.9,
+            blending: THREE.AdditiveBlending, depthWrite: false
+        }});
+        const patch = new THREE.Sprite(patchMat);
+        patch.scale.set(0.5, 0.5, 0.5);
+        patch.visible = false;
+        scene.add(patch);
+
+        // ── Region library: geometry rule + full study info ──
+        const REGIONS = [
+            {{ key:'brainstem', name:'Brainstem', color:0xff3b3b, anchor:[0,-0.85,0],
+               test:(n)=> n.y < -0.72 && Math.abs(n.x) < 0.22 && n.z > -0.35 && n.z < 0.35,
+               fn:'Controls vital automatic functions — breathing, heart rate, blood pressure — and links the brain to the spinal cord.',
+               strengthen:'Regular cardiovascular exercise and good respiratory health support the systems it regulates.',
+               diseases:'Brainstem stroke or injury is serious and can affect breathing and consciousness; rare tumors can also occur here.',
+               precaution:'This is a critical structure — sudden severe headache, loss of consciousness, or breathing trouble need emergency care.' }},
+            {{ key:'temporal', name:'Temporal Lobe', color:0xffd400, anchor:[0.75,-0.1,0.1],
+               test:(n)=> Math.abs(n.x) > 0.58,
+               fn:'Handles hearing, language comprehension, and forming and recalling memories.',
+               strengthen:'Listening to music, learning languages, reading, and conversation all engage this region.',
+               diseases:'Linked to temporal lobe epilepsy, memory disorders, and is often among the earliest areas affected in Alzheimer\\'s disease.',
+               precaution:'Protect hearing from loud noise, stay socially and mentally active, and treat hearing loss early.' }},
+            {{ key:'cerebellum', name:'Cerebellum', color:0xff2e9e, anchor:[0,-0.55,-0.6],
+               test:(n)=> n.y < -0.30 && n.z < -0.05,
+               fn:'Coordinates balance, posture, and fine motor movements.',
+               strengthen:'Balance exercises, dancing, and sports involving coordination help maintain this region.',
+               diseases:'Damage or degeneration causes ataxia (loss of coordination); can be affected by alcohol misuse or genetic conditions.',
+               precaution:'Limit excessive alcohol, prevent falls and head injuries, and raise balance issues with a doctor early.' }},
+            {{ key:'occipital', name:'Occipital Lobe', color:0x2ee88a, anchor:[0,0.1,-0.85],
+               test:(n)=> n.z < -0.42,
+               fn:'The brain\\'s main visual processing center — interprets shapes, color, and motion from the eyes.',
+               strengthen:'Regular eye checkups, good lighting when reading, and visual exercises support this region.',
+               diseases:'Occipital strokes, migraine with visual aura, and certain seizures can originate here.',
+               precaution:'Protect eyes from injury, manage migraine triggers, and get regular vision and blood pressure checks.' }},
+            {{ key:'parietal', name:'Parietal Lobe', color:0x7c5cff, anchor:[0,0.65,-0.1],
+               test:(n)=> n.y > 0.28,
+               fn:'Processes touch and spatial awareness, and helps integrate senses for navigation and coordination.',
+               strengthen:'Spatial-reasoning activities — map reading, sports, dance — stimulate this region.',
+               diseases:'Certain strokes here can cause spatial neglect or coordination difficulty.',
+               precaution:'Manage blood pressure and diabetes — stroke is a leading cause of parietal lobe damage.' }},
+            {{ key:'frontal', name:'Frontal Lobe', color:0x00e5ff, anchor:[0,0.1,0.8],
+               test:(n)=> true,
+               fn:'Handles decision-making, planning, problem-solving, movement, and personality regulation.',
+               strengthen:'Puzzles, learning new skills, regular exercise, and quality sleep all support this region.',
+               diseases:'Linked to stroke, traumatic brain injury, frontotemporal dementia, and some frontal lobe epilepsy.',
+               precaution:'Wear helmets during sports/cycling, manage blood pressure and cholesterol, and seek care after any head injury.' }},
+        ];
+        function classify(localPoint) {{
+            const n = new THREE.Vector3(localPoint.x/halfExtents.x, localPoint.y/halfExtents.y, localPoint.z/halfExtents.z);
+            for (const r of REGIONS) {{ if (r.test(n)) return r; }}
+            return REGIONS[REGIONS.length-1];
+        }}
+
+        function focusRegion(region, localPt) {{
+            selected = region; zoomed = true;
+            targetRotY = Math.atan2(-localPt.x, localPt.z);
+            targetRotX = Math.max(-0.5, Math.min(0.5, -Math.atan2(localPt.y, Math.sqrt(localPt.x*localPt.x+localPt.z*localPt.z)) * 0.5));
+            renderPanel(region, localPt);
+            if (root.requestFullscreen) {{ root.requestFullscreen().catch(function(){{}}); }}
+        }}
+
+        function selectRegionByKey(key) {{
+            const region = REGIONS.find(function(r) {{ return r.key === key; }});
+            if (!region) return;
+            const localPt = new THREE.Vector3(region.anchor[0]*halfExtents.x, region.anchor[1]*halfExtents.y, region.anchor[2]*halfExtents.z);
+            focusRegion(region, localPt);
+        }}
+
+        function renderDefaultPanel() {{
+            let legend = '';
+            REGIONS.forEach(function(r) {{
+                legend += '<button class="legendBtn" data-key="' + r.key + '" style="display:flex;align-items:center;gap:8px;' +
+                    'margin-bottom:7px;width:100%;background:none;border:none;text-align:left;cursor:pointer;padding:6px 8px;' +
+                    'border-radius:6px;">' +
+                    '<span style="width:10px;height:10px;border-radius:50%;background:#' + r.color.toString(16).padStart(6,'0') + ';flex:0 0 auto;"></span>' +
+                    '<span style="font-size:12px;color:#cbd5e1;">' + r.name + '</span></button>';
+            }});
+            panel.innerHTML =
+              '<div style="font-family:\\'DM Mono\\',monospace;font-size:10px;letter-spacing:1.5px;color:#00d4ff;margin-bottom:10px;">BRAIN EXPLORER</div>' +
+              '<div style="font-size:16px;font-weight:700;color:#f8fafc;margin-bottom:8px;">Explore the regions</div>' +
+              '<div style="font-size:12.5px;color:#94a3b8;line-height:1.6;margin-bottom:18px;">Hover over the brain to see each region highlighted in its own color, or click a name below to jump straight to it.</div>' +
+              '<div style="font-size:11px;color:#64748b;font-weight:700;letter-spacing:0.5px;margin-bottom:10px;">REGION KEY — CLICK TO VIEW</div>' +
+              legend;
+            panel.querySelectorAll('.legendBtn').forEach(function(btn) {{
+                btn.onmouseenter = function() {{ btn.style.background = 'rgba(255,255,255,0.06)'; }};
+                btn.onmouseleave = function() {{ btn.style.background = 'none'; }};
+                btn.onclick = function() {{ selectRegionByKey(btn.dataset.key); }};
+            }});
+        }}
+
+        function renderPanel(region, hitLocal) {{
+            patch.visible = true;
+            patch.material.color.setHex(region.color);
+            const worldPt = hitLocal.clone().applyMatrix4(brain.matrixWorld);
+            patch.position.copy(worldPt);
+
+            panel.innerHTML =
+              '<div style="font-family:\\'DM Mono\\',monospace;font-size:10px;letter-spacing:1.5px;color:#' + region.color.toString(16).padStart(6,'0') + ';margin-bottom:10px;">SELECTED REGION</div>' +
+              '<div style="font-size:18px;font-weight:800;color:#f8fafc;margin-bottom:12px;">' + region.name + '</div>' +
+              '<div style="font-size:11px;color:#00d4ff;font-weight:700;letter-spacing:0.5px;margin-bottom:4px;">FUNCTION</div>' +
+              '<div style="font-size:12.5px;color:#cbd5e1;line-height:1.55;margin-bottom:14px;">' + region.fn + '</div>' +
+              '<div style="font-size:11px;color:#00e5a0;font-weight:700;letter-spacing:0.5px;margin-bottom:4px;">HOW TO KEEP IT STRONG</div>' +
+              '<div style="font-size:12.5px;color:#cbd5e1;line-height:1.55;margin-bottom:14px;">' + region.strengthen + '</div>' +
+              '<div style="font-size:11px;color:#ff4d6d;font-weight:700;letter-spacing:0.5px;margin-bottom:4px;">RELATED CONDITIONS</div>' +
+              '<div style="font-size:12.5px;color:#cbd5e1;line-height:1.55;margin-bottom:14px;">' + region.diseases + '</div>' +
+              '<div style="font-size:11px;color:#f59e0b;font-weight:700;letter-spacing:0.5px;margin-bottom:4px;">PRECAUTIONS</div>' +
+              '<div style="font-size:12.5px;color:#cbd5e1;line-height:1.55;margin-bottom:16px;">' + region.precaution + '</div>' +
+              '<div style="font-size:10px;color:#4a5568;margin-bottom:14px;">General education only — not medical advice.</div>' +
+              '<button id="backBtn" style="background:#131923;border:1px solid rgba(255,255,255,0.12);color:#94a3b8;' +
+              'padding:8px 16px;border-radius:6px;font-size:12px;cursor:pointer;">&larr; Back to full brain</button>';
+
+            document.getElementById('backBtn').onclick = exitZoom;
+        }}
+        renderDefaultPanel();
+
+        function exitZoom() {{
+            zoomed = false; selected = null; patch.visible = false;
+            if (document.fullscreenElement) document.exitFullscreen();
+            renderDefaultPanel();
+        }}
+        document.getElementById('closeBtn').onclick = exitZoom;
+
+        // ── Interaction state ──
+        let targetRotY=0, targetRotX=0, curRotY=0, curRotX=0, autoSpin=0;
+        let zoomed=false, selected=null;
+        const raycaster = new THREE.Raycaster();
+        const mouseNdc = new THREE.Vector2(0,0);
+        const root = document.getElementById('explorerRoot');
+        const row  = document.getElementById('explorerRow');
+
+        function updateHover() {{
+            if (zoomed) return;
+            raycaster.setFromCamera(mouseNdc, camera);
+            const hits = raycaster.intersectObject(brain, true);
+            if (hits.length) {{
+                const localPt = brain.worldToLocal(hits[0].point.clone());
+                const region = classify(localPt);
+                tag.textContent = region.name;
+                tag.style.display = 'block';
+                patch.visible = true;
+                patch.material.color.setHex(region.color);
+                patch.position.copy(hits[0].point);
+            }} else {{
+                tag.style.display = 'none';
+                if (!selected) patch.visible = false;
+            }}
+        }}
+
+        function onMove(e) {{
+            const rect = canvas.getBoundingClientRect();
+            const mx = (e.clientX-rect.left)/rect.width, my=(e.clientY-rect.top)/rect.height;
+            mouseNdc.x = mx*2-1; mouseNdc.y = -(my*2-1);
+            if (!zoomed) {{ targetRotY = (mx-0.5)*0.9; targetRotX = (my-0.5)*-0.5; }}
+            tag.style.left = (e.clientX-rect.left+14)+'px';
+            tag.style.top  = (e.clientY-rect.top-8)+'px';
+            updateHover();
+        }}
+        canvas.addEventListener('mousemove', onMove);
+        canvas.addEventListener('mouseleave', function() {{ if(!zoomed){{targetRotX=0;targetRotY=0;}} tag.style.display='none'; }});
+
+        function resizeToContainer() {{
+            W = canvas.clientWidth;
+            const newH = canvas.clientHeight;
+            camera.aspect = W / newH;
+            camera.updateProjectionMatrix();
+            renderer.setSize(W, newH);
+        }}
+
+        const closeBtn = document.getElementById('closeBtn');
+        document.addEventListener('fullscreenchange', function() {{
+            const isFs = document.fullscreenElement === root;
+            if (isFs) {{
+                root.style.height = '100vh';
+                root.style.width = '100vw';
+                root.style.maxWidth = '1600px';
+                root.style.margin = '0 auto';
+                root.style.padding = '32px';
+                row.style.height = Math.round(window.innerHeight - 130) + 'px';
+                closeBtn.style.display = 'flex';
+                closeBtn.style.alignItems = 'center';
+                closeBtn.style.justifyContent = 'center';
+            }} else {{
+                root.style.height = '{height}px';
+                root.style.width = '100%';
+                root.style.margin = '0';
+                root.style.padding = '0';
+                row.style.height = '{canvas_h}px';
+                closeBtn.style.display = 'none';
+            }}
+            [30, 150, 350].forEach(function(ms) {{ setTimeout(resizeToContainer, ms); }});
+        }});
+
+        canvas.addEventListener('click', function() {{
+            raycaster.setFromCamera(mouseNdc, camera);
+            const hits = raycaster.intersectObject(brain, true);
+            if (!hits.length) return;
+            const localPt = brain.worldToLocal(hits[0].point.clone());
+            focusRegion(classify(localPt), localPt);
+        }});
+
+        function animate() {{
+            requestAnimationFrame(animate);
+            autoSpin += zoomed ? 0 : 0.0015;
+            curRotY += (targetRotY - curRotY) * 0.08;
+            curRotX += (targetRotX - curRotX) * 0.08;
+            brain.rotation.y = curRotY + autoSpin;
+            brain.rotation.x = curRotX;
+            camera.position.z += ((zoomed ? 4.6 : 7.0) - camera.position.z) * 0.06;
+            renderer.render(scene, camera);
+        }}
+        animate();
+
+        window.addEventListener('resize', resizeToContainer);
+    }})();
+    </script>
+    """
+    components.html(html, height=height, scrolling=False)
 
 
 # ── Page Config ───────────────────────────────────────────────────────────────
@@ -2420,27 +2799,32 @@ def page_landing():
             st.rerun()
         st.markdown("</div>", unsafe_allow_html=True)
 
-    # ── Hero ───────────────────────────────────────────────────────────────────
-    st.markdown("<div style='margin-top:60px'></div>", unsafe_allow_html=True)
-    _, col_hero, _ = st.columns([1, 8, 1])
-    with col_hero:
-        st.markdown("""
-        <div class="ns-hero" style="display: flex; flex-direction: column; align-items: center; text-align: center;">
-            <div class="ns-hero-grid"></div>
-            <div class="ns-hero-glow"></div>
-            <div class="ns-hero-eyebrow">Clinical AI Platform</div>
-            <h1 class="ns-hero-h1" style="margin: 0 auto;">
-                Detect Brain Tumors
-                <span class="line2" style="display: block; width: 100%;">with Explainable AI</span>
-            </h1>
-            <p class="ns-hero-sub" style="margin: 20px auto; max-width: 600px;">
-                Upload an MRI scan and receive AI-powered classification,
-                GRAD-CAM++ heatmaps, and a full clinical report in under 10 seconds.
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
+    # ── Hero title (centered, above the explorer) ───────────────────────────────
+    st.markdown("<div style='margin-top:40px'></div>", unsafe_allow_html=True)
+    st.markdown("""
+    <div class="ns-hero" style="display: flex; flex-direction: column; align-items: center; text-align: center;">
+        <div class="ns-hero-eyebrow">Clinical AI Platform</div>
+        <h1 class="ns-hero-h1" style="margin: 0 auto;">
+            Detect Brain Tumors
+            <span class="line2" style="display: block; width: 100%;">with Explainable AI</span>
+        </h1>
+        <p class="ns-hero-sub" style="margin: 18px auto 0; max-width: 600px;">
+            Upload an MRI scan and receive AI-powered classification,
+            GRAD-CAM++ heatmaps, and a full clinical report in under 10 seconds.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
 
-        # ── Action buttons ─────────────────────────────────────────────────────
+    # ── Brain Explorer (full width: brain left, live info panel right) ─────────
+    st.markdown("<div style='margin-top:28px'></div>", unsafe_allow_html=True)
+    _, exp_col, _ = st.columns([1, 10, 1])
+    with exp_col:
+        render_brain_explorer(height=520)
+
+    # ── Action buttons (full width, below both columns, as in the original) ────
+    st.markdown("<div style='margin-top:24px'></div>", unsafe_allow_html=True)
+    _, btn_row, _ = st.columns([1, 8, 1])
+    with btn_row:
         b1, b2, b3 = st.columns(3)
         with b1:
             if st.button(" Launch Dashboard", key="hero_launch",
@@ -2460,57 +2844,57 @@ def page_landing():
                 st.session_state.show_demo  = False
                 st.rerun()
 
-        # ── Video ──────────────────────────────────────────────────────────────
-        if st.session_state.show_video:
-            st.markdown("<div style='margin-top:32px'></div>", unsafe_allow_html=True)
-            st.video("https://youtu.be/12r392eTpTg")
+    # ── Video (full width, below hero) ────────────────────────────────────────
+    if st.session_state.show_video:
+        st.markdown("<div style='margin-top:32px'></div>", unsafe_allow_html=True)
+        st.video("https://youtu.be/12r392eTpTg")
 
-        # ── Demo Gallery ───────────────────────────────────────────────────────
-        if st.session_state.show_demo:
-            st.markdown("""
-            <div class="demo-gallery">
-                <div class="demo-gallery-title"></div>
-            </div>
-            """, unsafe_allow_html=True)
+    # ── Demo Gallery (full width, below hero) ─────────────────────────────────
+    if st.session_state.show_demo:
+        st.markdown("""
+        <div class="demo-gallery">
+            <div class="demo-gallery-title"></div>
+        </div>
+        """, unsafe_allow_html=True)
 
-            base = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "Testing")
-            samples = [
-                {"label": "Glioma",      "folder": "glioma",      "file": "Te-gl_0010.jpg"},
-                {"label": "Meningioma",  "folder": "meningioma",  "file": "Te-me_0010.jpg"},
-                {"label": "Pituitary",   "folder": "pituitary",   "file": "Te-pi_0010.jpg"},
-                {"label": "No Tumor",    "folder": "notumor",     "file": "Te-no_0010.jpg"},
-            ]
+        base = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "Testing")
+        samples = [
+            {"label": "Glioma",      "folder": "glioma",      "file": "Te-gl_0010.jpg"},
+            {"label": "Meningioma",  "folder": "meningioma",  "file": "Te-me_0010.jpg"},
+            {"label": "Pituitary",   "folder": "pituitary",   "file": "Te-pi_0010.jpg"},
+            {"label": "No Tumor",    "folder": "notumor",     "file": "Te-no_0010.jpg"},
+        ]
 
-            d1, d2, d3, d4 = st.columns(4)
-            demo_cols = [d1, d2, d3, d4]
+        d1, d2, d3, d4 = st.columns(4)
+        demo_cols = [d1, d2, d3, d4]
 
-            for i, s in enumerate(samples):
-                path = os.path.join(base, s["folder"], s["file"])
-                with demo_cols[i]:
-                    if os.path.exists(path):
-                        st.image(path, use_container_width=True)
-                        st.markdown(
-                            f"<div class='demo-img-label'>{s['label']}</div>",
-                            unsafe_allow_html=True
-                        )
-                        if st.button(f"Analyze →", key=f"demo_{i}", use_container_width=True):
-                            st.session_state.file_path         = path
-                            st.session_state.uploaded_filename = s["label"]
-                            st.session_state.logged_in         = True
-                            st.session_state.demo_mode         = True
-                            st.session_state.user_name         = "Guest"
-                            st.session_state.patient_name      = "Demo Patient"
-                            st.session_state.patient_age       = 0
-                            st.session_state.patient_gender    = "Unknown"
-                            st.session_state._analyzing        = True
-                            st.session_state.result            = None
-                            st.session_state.report_text       = None
-                            st.session_state.pdf_bytes         = None
-                            st.session_state.show_demo         = False
-                            st.session_state.page              = "dashboard"
-                            st.rerun()
-                    else:
-                        st.warning(f"Not found:\n{path}")
+        for i, s in enumerate(samples):
+            path = os.path.join(base, s["folder"], s["file"])
+            with demo_cols[i]:
+                if os.path.exists(path):
+                    st.image(path, use_container_width=True)
+                    st.markdown(
+                        f"<div class='demo-img-label'>{s['label']}</div>",
+                        unsafe_allow_html=True
+                    )
+                    if st.button(f"Analyze →", key=f"demo_{i}", use_container_width=True):
+                        st.session_state.file_path         = path
+                        st.session_state.uploaded_filename = s["label"]
+                        st.session_state.logged_in         = True
+                        st.session_state.demo_mode         = True
+                        st.session_state.user_name         = "Guest"
+                        st.session_state.patient_name      = "Demo Patient"
+                        st.session_state.patient_age       = 0
+                        st.session_state.patient_gender    = "Unknown"
+                        st.session_state._analyzing        = True
+                        st.session_state.result            = None
+                        st.session_state.report_text       = None
+                        st.session_state.pdf_bytes         = None
+                        st.session_state.show_demo         = False
+                        st.session_state.page              = "dashboard"
+                        st.rerun()
+                else:
+                    st.warning(f"Not found:\n{path}")
 
     # ── Stats strip ────────────────────────────────────────────────────────────
     st.markdown("""
@@ -2593,8 +2977,31 @@ def page_auth():
         padding-top: 0 !important;
         padding-bottom: 0 !important;
     }
+    .auth-back-btn button {
+        background: transparent !important;
+        border: none !important;
+        color: var(--muted2) !important;
+        font-family: 'DM Mono', monospace !important;
+        font-size: 12px !important;
+        padding: 14px 20px !important;
+        text-align: left !important;
+        box-shadow: none !important;
+    }
+    .auth-back-btn button:hover {
+        color: var(--cyan) !important;
+        background: transparent !important;
+    }
     </style>
     """, unsafe_allow_html=True)
+
+    # ── Back to Home ───────────────────────────────────────────────────────────
+    st.markdown("<div class='auth-back-btn' style='position:relative;z-index:20;'>", unsafe_allow_html=True)
+    back_col, _ = st.columns([2, 10])
+    with back_col:
+        if st.button("← Back to Home", key="auth_back_home"):
+            st.session_state.page = "landing"
+            st.rerun()
+    st.markdown("</div>", unsafe_allow_html=True)
 
     left, right = st.columns([1, 1], gap="small")
 
