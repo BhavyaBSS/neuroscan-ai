@@ -321,7 +321,7 @@ def _call_llm(prompt: str) -> str:
                 max_tokens=2048,   # reasoning models spend tokens on thinking
             )
             if model.startswith("openai/gpt-oss"):
-                kwargs["reasoning_effort"] = "low"
+                kwargs["extra_body"] = {"reasoning_effort": "low"}
             response = client.chat.completions.create(**kwargs)
             text = _sanitize(response.choices[0].message.content or "")
             if _has_all_sections(text):
@@ -342,6 +342,10 @@ def generate_report(data: dict) -> str:
         llm_body = _call_llm(_build_prompt(data))
     except Exception as exc:
         print(f"[LLM ERROR] {exc}")
+        try:
+            st.error(f"LLM error: {str(exc)[:500]}")   # TEMPORARY
+        except Exception:
+            pass
         llm_body = (
             "SUMMARY\nReport generation encountered a technical error. Please retry.\n\n"
             "FINDINGS\nNot available.\n\n"
