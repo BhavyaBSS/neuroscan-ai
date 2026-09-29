@@ -340,6 +340,18 @@ def _call_llm(prompt: str) -> str:
     raise last_exc or RuntimeError("No LLM output")
 
 
+import unicodedata
+
+
+def _pdf_safe(text: str) -> str:
+    """Make text renderable with built-in Helvetica (Latin-1 only)."""
+    for ch in ("\u2010", "\u2011", "\u2012", "\u2013", "\u2014", "\u2212"):
+        text = text.replace(ch, "-")
+    text = unicodedata.normalize("NFKC", text)
+    text = text.replace("\u2265", ">=").replace("\u2264", "<=").replace("\u2192", "->")
+    return text.encode("latin-1", "ignore").decode("latin-1")
+
+
 def generate_report(data: dict) -> str:
     """Generate the plain-text clinical report. No AI references anywhere."""
     ctx = ReportContext()
@@ -358,6 +370,8 @@ def generate_report(data: dict) -> str:
             "IMPRESSION\nNot available.\n\n"
             "RECOMMENDATION\n1. Contact technical support.\n2. Retry report generation."
         )
+
+    llm_body = _pdf_safe(llm_body)
 
     patient_name = _safe_text(data.get("name"))
     age          = _safe_text(data.get("age"))
