@@ -132,6 +132,12 @@ def _sanitize(text: str) -> str:
     if not text:
         return ""
     cleaned = text
+    for bad, good in {
+        "\u2010": "-", "\u2011": "-", "\u2012": "-", "\u2212": "-",
+        "\u00a0": " ", "\u202f": " ", "\u2009": " ", "\u200b": "",
+        "\u2265": ">=", "\u2264": "<=", "\u2192": "->", "\u00b5": "u",
+    }.items():
+        cleaned = cleaned.replace(bad, good)
     for old, new in _AI_REPLACEMENTS:
         cleaned = cleaned.replace(old, new)
     cleaned = re.sub(r"\bAI\b", "", cleaned, flags=re.IGNORECASE)
