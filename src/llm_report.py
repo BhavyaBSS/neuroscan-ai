@@ -297,20 +297,49 @@ or any text after the RECOMMENDATION section. End immediately.
 # PLAIN-TEXT REPORT
 # ============================================================
 
+_DEFAULT_MODELS = ["openai/gpt-oss-120b", "qwen/qwen3.6-27b"]
+
+
+def _has_all_sections(text: str) -> bool:
+    upper = text.upper()
+    return all(h in upper for h in _KNOWN_HEADINGS)
+
+
+def _call_llm(prompt: str) -> str:
+    """Try each model in order; return the first output containing all 4 sections."""
+    client = _get_client()
+    override = _get_secret("GROQ_MODEL", "")
+    models = ([override] if override else []) + _DEFAULT_MODELS
+    last_exc: Exception | None = None
+
+    for model in models:
+        try:
+            kwargs: dict = dict(
+                model=model,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.3,
+                max_tokens=2048,   # reasoning models spend tokens on thinking
+            )
+            if model.startswith("openai/gpt-oss"):
+                kwargs["reasoning_effort"] = "low"
+            response = client.chat.completions.create(**kwargs)
+            text = _sanitize(response.choices[0].message.content or "")
+            if _has_all_sections(text):
+                return text
+            last_exc = RuntimeError(f"{model}: incomplete output: {text[:200]!r}")
+        except Exception as exc:
+            last_exc = exc
+        print(f"[LLM ERROR] model={model}: {last_exc}")
+
+    raise last_exc or RuntimeError("No LLM output")
+
+
 def generate_report(data: dict) -> str:
     """Generate the plain-text clinical report. No AI references anywhere."""
     ctx = ReportContext()
 
     try:
-        client = _get_client()
-        response = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=[{"role": "user", "content": _build_prompt(data)}],
-            temperature=0.3,
-            max_tokens=1024,
-        )
-        llm_raw  = response.choices[0].message.content or ""
-        llm_body = _sanitize(llm_raw)
+        llm_body = _call_llm(_build_prompt(data))
     except Exception as exc:
         print(f"[LLM ERROR] {exc}")
         llm_body = (
